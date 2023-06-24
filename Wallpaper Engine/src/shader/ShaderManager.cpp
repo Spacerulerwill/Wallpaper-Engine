@@ -156,18 +156,18 @@ void ShaderManager::SetShader(const std::string& fragment_path)
         glGetActiveUniform(u_ShaderProgramID, (GLuint)i, bufSize, &length, &size, &type, name);
            
         // default uniforms
-        if (strcmp(name, "iResolution") == 0) {
+        if (strcmp(name, "iResolution") == 0 && type == GL_INT_VEC2) {
             int width, height;
             GLint loc = i;
             glfwGetWindowSize(WindowManager::GetWallpaperWindow(), &width, &height);
             glUniform2i(loc, width, height);
             LOG_INFO("Found default uniform: iResolution");
         }
-        else if (strcmp(name, "iTime") == 0) {
+        else if (strcmp(name, "iTime") == 0 && type == GL_FLOAT) {
             u_TimeUniformLoc = i;
             LOG_INFO("Found default uniform: iTime");
         }
-        else if (strcmp(name, "iMouse") == 0) {
+        else if (strcmp(name, "iMouse") == 0 && type == GL_INT_VEC2) {
             u_MouseUniformLoc = i;
             LOG_INFO("Found default uniform: iMouse");
         }
