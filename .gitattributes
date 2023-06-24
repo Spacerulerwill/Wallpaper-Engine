@@ -1,0 +1,4 @@
+include/** linguist-vendored
+Wallpaper*Engine/glad.c linguist-vendored
+Wallpaper*Engine/imgui_impl_glfw.cpp linguist-vendored
+Wallpaper*Engine/imgui_impl_opengl3.cpp linguist-vendored
