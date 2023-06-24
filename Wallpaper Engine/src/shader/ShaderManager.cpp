@@ -133,8 +133,8 @@ void ShaderManager::SetShader(const std::string& fragment_path)
     glDeleteProgram(u_ShaderProgramID);
     ClearUniformMap();
     m_FragmentShaderPath = fragment_path;
-    u_MouseUniformLoc = -1;
-    u_TimeUniformLoc = -1;
+    m_MouseUniformLoc = -1;
+    m_TimeUniformLoc = -1;
     u_ShaderProgramID = newProgram;
 
     glUseProgram(u_ShaderProgramID);
@@ -156,19 +156,19 @@ void ShaderManager::SetShader(const std::string& fragment_path)
         glGetActiveUniform(u_ShaderProgramID, (GLuint)i, bufSize, &length, &size, &type, name);
            
         // default uniforms
-        if (strcmp(name, "iResolution") == 0 && type == GL_INT_VEC2) {
+        if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
             int width, height;
             GLint loc = i;
             glfwGetWindowSize(WindowManager::GetWallpaperWindow(), &width, &height);
-            glUniform2i(loc, width, height);
+            glUniform2f(loc, static_cast<float>(width), static_cast<float>(height));
             LOG_INFO("Found default uniform: iResolution");
         }
         else if (strcmp(name, "iTime") == 0 && type == GL_FLOAT) {
-            u_TimeUniformLoc = i;
+            m_TimeUniformLoc = i;
             LOG_INFO("Found default uniform: iTime");
         }
-        else if (strcmp(name, "iMouse") == 0 && type == GL_INT_VEC2) {
-            u_MouseUniformLoc = i;
+        else if (strcmp(name, "iMouse") == 0 && type == GL_FLOAT_VEC2) {
+            m_MouseUniformLoc = i;
             LOG_INFO("Found default uniform: iMouse");
         }
         else {

@@ -40,7 +40,7 @@ public:
 	void Unbind() const;
 	void SetShader(const std::string& fragment_path);
 
-	unsigned int u_TimeUniformLoc = -1;
-	unsigned int u_MouseUniformLoc = -1;
+	int m_TimeUniformLoc = -1;
+	int m_MouseUniformLoc = -1;
 };
 

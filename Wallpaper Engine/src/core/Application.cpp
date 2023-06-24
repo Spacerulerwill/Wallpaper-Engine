@@ -306,17 +306,17 @@ void Application::CheckImGUIButtons()
 void Application::SendDefaultUniforms()
 {
 	// send mouse uniform if needed
-	if (shaderManager->u_MouseUniformLoc != -1) {
+	if (shaderManager->m_MouseUniformLoc != -1) {
 		POINT p;
 		if (GetCursorPos(&p))
 		{
-			glUniform2f(shaderManager->u_MouseUniformLoc, static_cast<GLfloat>(p.x), static_cast<GLfloat>(p.y));
+			glUniform2f(shaderManager->m_MouseUniformLoc, static_cast<float>(p.x), static_cast<float>(p.y));
 		}
 	}
 		
 	// send time if needed
-	if (shaderManager->u_TimeUniformLoc) {
-		glUniform1f(shaderManager->u_TimeUniformLoc, static_cast<float>(glfwGetTime()));
+	if (shaderManager->m_TimeUniformLoc) {
+		glUniform1f(shaderManager->m_TimeUniformLoc, static_cast<float>(glfwGetTime()));
 	}
 }
 

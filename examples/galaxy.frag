@@ -10,7 +10,7 @@ out vec4 fragColor;
 
 uniform bool SCREEN_EFFECT;
 uniform float iTime;
-uniform ivec2 iResolution;
+uniform vec2 iResolution;
 
 // random/hash function              
 float hash( float n )

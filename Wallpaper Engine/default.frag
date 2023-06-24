@@ -9,7 +9,7 @@
 #version 330 core
 
 uniform float iTime;
-uniform ivec2 iResolution;
+uniform vec2 iResolution;
 uniform float timeMultiplier;
 
 uniform vec4 color;
