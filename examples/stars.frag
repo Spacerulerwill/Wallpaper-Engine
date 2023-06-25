@@ -23,8 +23,7 @@ uniform int iterations;
 uniform float zoom;
 uniform float tile;
 uniform float speed;
-
-
+uniform float mouseScale;
 
 void main()
 {
@@ -34,7 +33,7 @@ void main()
 	vec3 dir=vec3(uv*zoom,1.);
 	float time=iTime*speed+.25;
 
-	vec2 mouse = iMouse * 0.01;
+	vec2 mouse = iMouse * 0.01 * mouseScale;
 
 	//mouse rotation
 	float a1=.5+mouse.x/iResolution.x*2.;
