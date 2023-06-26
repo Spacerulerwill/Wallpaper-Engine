@@ -13,8 +13,8 @@ When writing shaders you get access to a couple default uniforms:
 
 out vec4 FragColor;
 
-uniform ivec2 iResolution; // Screen width and height
-uniform ivec2 iMouse; // Mouse position on screen
+uniform vec2 iResolution; // Screen width and height
+uniform vec2 iMouse; // Mouse position on screen
 uniform float iTime; // Time in seconds since application started
 
 void main(){
