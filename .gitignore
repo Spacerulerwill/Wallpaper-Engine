@@ -200,6 +200,8 @@ PublishScripts/
 csx/
 *.build.csdef
 
+build/
+
 # Microsoft Azure Emulator
 ecf/
 rcf/
