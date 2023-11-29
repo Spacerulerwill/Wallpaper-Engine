@@ -1,4 +1,4 @@
-# Wallpaper-Engine  [![Lines Of Code](https://tokei.rs/b1/github/Spacerulerwill/Wallpaper-Engine?category=code)](https://github.com/XAMPPRocky/tokei)
+# Wallpaper-Engine
 A wallpaper engine that allows you to run custom fragment shaders on your wallpaper.
 
 # Video Demo
