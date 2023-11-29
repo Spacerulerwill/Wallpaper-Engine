@@ -23,3 +23,12 @@ void main(){
 ```
 
 Any other uniforms will be automatically added to the ImGUI menu so you can change them at any time
+
+# Build Instructions
+
+## Windows 
+    cd tools
+    configure.bat
+    cd ../build
+    WallpaperEngine.sln
+Once you are in the solution you can build the project like normal. Make sure to copy the ```res``` folder to the binary executables location after it has been built.
