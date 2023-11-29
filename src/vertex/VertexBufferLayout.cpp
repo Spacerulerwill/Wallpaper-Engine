@@ -14,16 +14,16 @@ void VertexBufferLayout::AddAttribute<float>(unsigned int count)
 template <>
 void VertexBufferLayout::AddAttribute<unsigned int>(unsigned int count)
 {
-    m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE});
+    m_Elements.push_back({ GL_UNSIGNED_INT, count, GL_FALSE });
     m_Stride += VertexBufferLayoutElement::GetSize(GL_UNSIGNED_INT) * count;
 }
 
 std::vector<VertexBufferLayoutElement> VertexBufferLayout::GetElements() const
 {
-	return m_Elements;
+    return m_Elements;
 }
 
 unsigned int VertexBufferLayout::GetStride() const
 {
-	return m_Stride;
+    return m_Stride;
 }

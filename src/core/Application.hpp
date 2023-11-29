@@ -9,23 +9,23 @@
 class Application
 {
 private:
-	static GLFWwindow* p_WallpaperWindow;
-	static GLFWwindow* p_ImGUIWindow;
+    static GLFWwindow* p_WallpaperWindow;
+    static GLFWwindow* p_ImGUIWindow;
 
-	ShaderManager* shaderManager = nullptr;
+    ShaderManager* shaderManager = nullptr;
 
-	wchar_t* wallpaper_dir;
-	wchar_t* GetWallpaper();
-	void SetWallpaper(const wchar_t* path);
-	
-	void CheckImGUIButtons();
-	bool m_isLoadShaderButtonPressed = false;
+    wchar_t* wallpaper_dir;
+    wchar_t* GetWallpaper();
+    void SetWallpaper(const wchar_t* path);
+    
+    void CheckImGUIButtons();
+    bool m_isLoadShaderButtonPressed = false;
 
 public:
-	Application();
+    Application();
 
-	void Run();
-	void ResetWallpaper();
-	void SendDefaultUniforms();
+    void Run();
+    void ResetWallpaper();
+    void SendDefaultUniforms();
 };
 

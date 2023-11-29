@@ -18,7 +18,7 @@ std::string ShaderManager::ParseShader(const std::string& filepath)
     std::string line;
     std::stringstream ss;
     while (getline(stream, line)) {
-        ss << line << "\n";  
+        ss << line << "\n";
     }
     return ss.str();
 }
@@ -36,7 +36,7 @@ unsigned int ShaderManager::CompileShader(unsigned int type, std::string& source
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
         char* msg = new char[length];
         glGetShaderInfoLog(id, length, &length, msg);
-        
+
         if (type == GL_VERTEX_SHADER) {
             LOG_ERROR("Failed to compile vertex shader");
         }
@@ -45,7 +45,7 @@ unsigned int ShaderManager::CompileShader(unsigned int type, std::string& source
         }
         LOG_ERROR(msg);
         glDeleteShader(id);
-        delete [] msg;
+        delete[] msg;
         return -1;
     }
 
@@ -154,7 +154,7 @@ void ShaderManager::SetShader(const std::string& fragment_path)
     for (i = 0; i < count; i++)
     {
         glGetActiveUniform(u_ShaderProgramID, (GLuint)i, bufSize, &length, &size, &type, name);
-           
+
         // default uniforms
         if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
             int width, height;
@@ -175,7 +175,7 @@ void ShaderManager::SetShader(const std::string& fragment_path)
             // insert into map non default uniforms for use in ImGUI menu
             switch (type) {
             case GL_FLOAT: {
-                m_UniformMap.insert({ name, Uniform{ i, type, (void*)new float(1.0f)}});
+                m_UniformMap.insert({ name, Uniform{ i, type, (void*)new float(1.0f)} });
                 break;
             }
             case GL_INT: {
@@ -183,27 +183,27 @@ void ShaderManager::SetShader(const std::string& fragment_path)
                 break;
             }
             case GL_INT_VEC2: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[2] {0, 0}}});
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[2] {0, 0}} });
                 break;
             }
             case GL_INT_VEC3: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[3]{0, 0, 0}} });
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[3] {0, 0, 0}} });
                 break;
             }
             case GL_INT_VEC4: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[4] {0, 0, 0, 0}}});
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[4] {0, 0, 0, 0}} });
                 break;
             }
             case GL_FLOAT_VEC2: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[2] {0.0f, 0.0f}}});
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[2] {0.0f, 0.0f}} });
                 break;
             }
             case GL_FLOAT_VEC3: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[3] {0.0f, 0.0f, 0.0f}}});
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[3] {0.0f, 0.0f, 0.0f}} });
                 break;
             }
             case GL_FLOAT_VEC4: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[4] {0.0f, 0.0f, 0.0f, 0.0f}}});
+                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[4] {0.0f, 0.0f, 0.0f, 0.0f}} });
                 break;
             }
             case GL_BOOL: {

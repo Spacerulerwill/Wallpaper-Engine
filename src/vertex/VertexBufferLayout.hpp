@@ -3,8 +3,8 @@
 #include <vector>
 
 struct VertexBufferLayoutElement {
-	unsigned int type;
-	unsigned int count;
+    unsigned int type;
+    unsigned int count;
     GLuint normalized;
 
     static unsigned int GetSize(unsigned int type) {

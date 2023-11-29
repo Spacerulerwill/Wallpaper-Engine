@@ -43,9 +43,9 @@ RECT get_desktop_rect() {
 
 void WindowManager::Init()
 {
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
 #ifdef __APPLE__
@@ -54,14 +54,12 @@ void WindowManager::Init()
 
     RECT desktop = get_desktop_rect();
 
-	GLFWwindow* wallpaper_window = glfwCreateWindow(desktop.right, desktop.bottom, "Wallpaper Engine", NULL, NULL);
+    GLFWwindow* wallpaper_window = glfwCreateWindow(desktop.right, desktop.bottom, "Wallpaper Engine", NULL, NULL);
 
-	if (wallpaper_window == NULL)
-	{
-        LOG_CRITICAL("Failed to create wallpaper window! Aborting...");
-		glfwTerminate();
-		std::exit(-1);
-	}
+    if (wallpaper_window == NULL)
+    {
+        throw std::runtime_error("Failed to create wallpaper window! Aborting...");
+    }
     m_WallpaperWindow = wallpaper_window;
     glfwMakeContextCurrent(m_WallpaperWindow);
 
