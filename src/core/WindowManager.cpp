@@ -70,9 +70,7 @@ void WindowManager::Init()
 
     if (imgui_window == NULL)
     {
-        LOG_CRITICAL("Failed to create ImGUI window! Aborting...");
-        glfwTerminate();
-        std::exit(-1);
+        throw std::runtime_error("Failed to create ImGUI window! Aborting...");
     }
     m_ImGUIWindow = imgui_window;
 

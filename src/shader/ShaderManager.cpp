@@ -1,10 +1,10 @@
 #include "ShaderManager.hpp"
-#include <util/Log.hpp>
-#include <vector>
-#include <sstream>
-#include <string>
 #include <algorithm>
 #include <core/WindowManager.hpp>
+#include <sstream>
+#include <string>
+#include <util/Log.hpp>
+#include <vector>
 
 std::string ShaderManager::ParseShader(const std::string& filepath)
 {

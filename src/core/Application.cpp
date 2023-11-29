@@ -1,14 +1,14 @@
 #include "Application.hpp"
-#include <vector>
-#include <unordered_map>
-#include <system_error>
-#include <Windows.h>
 #include <ShObjIdl.h>
+#include <system_error>
+#include <unordered_map>
+#include <vector>
+#include <Windows.h>
 
 #include <imgui.h>
-#include <imgui_internal.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
+#include <imgui_internal.h>
 
 #include <vertex/IndexBuffer.hpp>
 #include <vertex/VertexArray.hpp>
@@ -17,8 +17,8 @@
 
 #include <core/WindowManager.hpp>
 #include <shader/ShaderManager.hpp>
-#include <util/Log.hpp>
 #include <util/Constants.hpp>
+#include <util/Log.hpp>
 
 // static variable definitions
 GLFWwindow* Application::p_WallpaperWindow = nullptr;

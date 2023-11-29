@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <cmath>
 #include <gl.h>
 #include <GLFW/glfw3.h>
 #include <shader/ShaderManager.hpp>
+#include <vector>
 
 class Application
 {
@@ -17,7 +17,7 @@ private:
     wchar_t* wallpaper_dir;
     wchar_t* GetWallpaper();
     void SetWallpaper(const wchar_t* path);
-    
+
     void CheckImGUIButtons();
     bool m_isLoadShaderButtonPressed = false;
 

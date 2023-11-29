@@ -1,12 +1,12 @@
 #pragma once
 
+#include <any>
+#include <fstream>
 #include <gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include <fstream>
 #include <string>
 #include <unordered_map>
-#include <any>
 
 struct Uniform {
     unsigned int location;

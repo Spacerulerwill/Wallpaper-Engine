@@ -11,7 +11,6 @@ private:
     static GLFWwindow* m_ImGUIWindow;
 
 public:
-
     static void Init();
 
     inline static GLFWwindow*& GetWallpaperWindow() { return m_WallpaperWindow; };
