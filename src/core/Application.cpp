@@ -20,10 +20,8 @@
 #include <util/Constants.hpp>
 
 // static variable definitions
-std::unique_ptr<Application> Application::s_Instance = nullptr;
 GLFWwindow* Application::p_WallpaperWindow = nullptr;
 GLFWwindow* Application::p_ImGUIWindow = nullptr;
-
 
 
 Application::Application()
@@ -318,12 +316,4 @@ void Application::SendDefaultUniforms()
 	if (shaderManager->m_TimeUniformLoc) {
 		glUniform1f(shaderManager->m_TimeUniformLoc, static_cast<float>(glfwGetTime()));
 	}
-}
-
-
-std::unique_ptr<Application>& Application::GetInstance() {
-    if (Application::s_Instance == nullptr) {
-        Application::s_Instance = std::unique_ptr<Application>(new Application);
-    }
-    return Application::s_Instance;
 }

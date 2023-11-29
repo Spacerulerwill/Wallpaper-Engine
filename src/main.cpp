@@ -1,6 +1,7 @@
 #include <core/Application.hpp>
 
 int main() {
-	Application::GetInstance()->Run();
+	Application app;
+	app.Run();
 	return 0;
 }

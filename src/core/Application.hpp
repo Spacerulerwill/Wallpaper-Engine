@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <vector>
 #include <cmath>
 #include <gl.h>
@@ -10,7 +9,6 @@
 class Application
 {
 private:
-	static std::unique_ptr<Application> s_Instance;
 	static GLFWwindow* p_WallpaperWindow;
 	static GLFWwindow* p_ImGUIWindow;
 
@@ -28,7 +26,6 @@ public:
 
 	void Run();
 	void ResetWallpaper();
-	static std::unique_ptr<Application>& GetInstance();
 	void SendDefaultUniforms();
 };
 
