@@ -5,6 +5,7 @@
 #include <gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <opengl/Window.hpp>
 #include <string>
 #include <unordered_map>
 
@@ -38,7 +39,7 @@ public:
 
     void Bind() const;
     void Unbind() const;
-    void SetShader(const std::string& fragment_path);
+    void SetShader(const std::string& fragment_path, WindowDimensions dim);
 
     int m_TimeUniformLoc = -1;
     int m_MouseUniformLoc = -1;

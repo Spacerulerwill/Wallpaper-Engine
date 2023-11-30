@@ -1,27 +1,24 @@
 #ifndef APPLICATION_H
 #define APPLICATION_H
 
-#include <cmath>
 #include <gl.h>
 #include <GLFW/glfw3.h>
-#include <shader/ShaderManager.hpp>
-#include <vector>
+#include <memory>
+#include <opengl/ShaderManager.hpp>
+#include <opengl/Window.hpp>
 
 class Application
 {
 private:
-    static GLFWwindow* p_WallpaperWindow;
-    static GLFWwindow* p_ImGUIWindow;
-    ShaderManager* shaderManager = nullptr;
-    wchar_t* wallpaper_dir;
+    std::unique_ptr<ShaderManager> p_ShaderManager = nullptr;
+    std::unique_ptr<Window> p_WallpaperWindow = nullptr;
+    std::unique_ptr<Window> p_ImGUIWindow = nullptr;
+    wchar_t* p_WallpaperDir;
     void CheckImGUIButtons();
     bool m_isLoadShaderButtonPressed = false;
-
 public:
     Application();
-
     void Run();
-    void ResetWallpaper();
     void SendDefaultUniforms();
 };
 

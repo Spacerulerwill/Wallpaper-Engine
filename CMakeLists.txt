@@ -17,10 +17,10 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/core/Application.cpp
     src/core/Application.hpp
-    src/core/WindowManager.cpp
-    src/core/WindowManager.hpp
-    src/shader/ShaderManager.cpp
-    src/shader/ShaderManager.hpp
+    src/opengl/ShaderManager.cpp
+    src/opengl/ShaderManager.hpp
+    src/opengl/Window.cpp
+    src/opengl/Window.hpp
     src/util/Log.cpp
     src/util/Log.hpp
 )

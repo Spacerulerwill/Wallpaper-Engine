@@ -1,6 +1,5 @@
 #include "ShaderManager.hpp"
 #include <algorithm>
-#include <core/WindowManager.hpp>
 #include <sstream>
 #include <string>
 #include <util/Log.hpp>
@@ -114,7 +113,7 @@ void ShaderManager::Unbind() const
     glUseProgram(0);
 }
 
-void ShaderManager::SetShader(const std::string& fragment_path)
+void ShaderManager::SetShader(const std::string& fragment_path, WindowDimensions dim)
 {
 
     std::string vertexSource = ParseShader(m_VertexShaderPath);
@@ -157,22 +156,17 @@ void ShaderManager::SetShader(const std::string& fragment_path)
 
         // default uniforms
         if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
-            int width, height;
-            GLint loc = i;
-            glfwGetWindowSize(WindowManager::GetWallpaperWindow(), &width, &height);
-            glUniform2f(loc, static_cast<float>(width), static_cast<float>(height));
-            LOG_INFO("Found default uniform: iResolution");
+            glUniform2f(static_cast<GLint>(i), static_cast<float>(dim.width), static_cast<float>(dim.height));
         }
         else if (strcmp(name, "iTime") == 0 && type == GL_FLOAT) {
             m_TimeUniformLoc = i;
-            LOG_INFO("Found default uniform: iTime");
         }
         else if (strcmp(name, "iMouse") == 0 && type == GL_FLOAT_VEC2) {
             m_MouseUniformLoc = i;
-            LOG_INFO("Found default uniform: iMouse");
         }
         else {
             // insert into map non default uniforms for use in ImGUI menu
+            // WTF WAS I THINKING? Stupid memory leak
             switch (type) {
             case GL_FLOAT: {
                 m_UniformMap.insert({ name, Uniform{ i, type, (void*)new float(1.0f)} });
