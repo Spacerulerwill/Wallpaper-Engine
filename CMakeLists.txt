@@ -21,17 +21,8 @@ add_executable(${PROJECT_NAME}
     src/core/WindowManager.hpp
     src/shader/ShaderManager.cpp
     src/shader/ShaderManager.hpp
-    src/util/Constants.hpp
     src/util/Log.cpp
     src/util/Log.hpp
-    src/vertex/IndexBuffer.cpp
-    src/vertex/IndexBuffer.hpp
-    src/vertex/VertexArray.cpp
-    src/vertex/VertexArray.hpp
-    src/vertex/VertexBuffer.cpp
-    src/vertex/VertexBuffer.hpp
-    src/vertex/VertexBufferLayout.cpp
-    src/vertex/VertexBufferLayout.hpp
 )
 
 add_subdirectory(submodules/glfw)
@@ -42,7 +33,6 @@ target_include_directories(${PROJECT_NAME}
     PUBLIC submodules/spdlog/include
     PUBLIC include/imgui
     PUBLIC include/glad
-    PUBLIC include/imgui
     PUBLIC include
     PUBLIC src
 )

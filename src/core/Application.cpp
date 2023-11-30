@@ -10,14 +10,8 @@
 #include <imgui_impl_opengl3.h>
 #include <imgui_internal.h>
 
-#include <vertex/IndexBuffer.hpp>
-#include <vertex/VertexArray.hpp>
-#include <vertex/VertexBuffer.hpp>
-#include <vertex/VertexBufferLayout.hpp>
-
 #include <core/WindowManager.hpp>
 #include <shader/ShaderManager.hpp>
-#include <util/Constants.hpp>
 #include <util/Log.hpp>
 
 // static variable definitions
@@ -121,20 +115,6 @@ void Application::Run()
         throw std::runtime_error("Failed to intialise GLAD!");
     }
 
-    // create buffers for rendering the quad
-    VertexBufferLayout layout;
-    layout.AddAttribute<float>(2);
-    layout.AddAttribute<float>(2);
-
-    VertexBuffer VBO(vertices, sizeof(vertices));
-    IndexBuffer EBO(indices, sizeof(indices));
-
-    VertexArray VAO;
-    VAO.AddBuffer(VBO, layout);
-
-    VAO.Bind();
-    EBO.Bind();
-
     shaderManager = new ShaderManager();
     shaderManager->SetShader("res/default.frag");
 
@@ -145,6 +125,10 @@ void Application::Run()
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(p_ImGUIWindow, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+
+    GLuint vao;
+    glGenVertexArrays(1, &vao);
+    glBindVertexArray(vao);
 
     // application loop
     // ---------------
@@ -201,8 +185,8 @@ void Application::Run()
             }
             }
         }
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        shaderManager->Bind();
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         glfwSwapBuffers(p_WallpaperWindow);
 
         CheckImGUIButtons();
@@ -278,6 +262,7 @@ void Application::Run()
     }
     glfwTerminate();
     SetWallpaper(wallpaper_dir);
+    glDeleteVertexArrays(1, &vao);
     delete shaderManager;
 }
 
