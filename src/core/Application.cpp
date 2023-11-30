@@ -18,30 +18,21 @@
 GLFWwindow* Application::p_WallpaperWindow = nullptr;
 GLFWwindow* Application::p_ImGUIWindow = nullptr;
 
-
-Application::Application()
-{
-    wallpaper_dir = GetWallpaper();
-}
-
-wchar_t* Application::GetWallpaper()
-{
+// Get the directory of the currently active wallpaper in Windows 10
+wchar_t* GetWallpaper() {
     wchar_t buf[512];
     SystemParametersInfoW(SPI_GETDESKWALLPAPER, 512, buf, 0);
     return &buf[0];
 }
 
-void Application::ResetWallpaper()
+// Set the Windows 10 wallpaper to the path specified
+void SetWallpaper(wchar_t* path)
 {
-    SetWallpaper(wallpaper_dir);
+    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, static_cast<void*>(path), SPIF_UPDATEINIFILE);
 }
 
-void Application::SetWallpaper(const wchar_t* path)
-{
-    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (void*)path, SPIF_UPDATEINIFILE);
-}
-
-bool openFile(std::string* sFilePath)
+// open a Windows 10 file dialog window
+bool openFileDialog(std::string* sFilePath)
 {
     //  CREATE FILE OBJECT INSTANCE
     HRESULT f_SysHr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -94,6 +85,11 @@ bool openFile(std::string* sFilePath)
     f_FileSystem->Release();
     CoUninitialize();
     return TRUE;
+}
+
+Application::Application() : wallpaper_dir(GetWallpaper())
+{
+
 }
 
 void Application::Run()
@@ -256,7 +252,6 @@ void Application::Run()
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(p_ImGUIWindow);
-
         glfwPollEvents();
 
     }
@@ -270,9 +265,8 @@ void Application::Run()
 void Application::CheckImGUIButtons()
 {
     if (m_isLoadShaderButtonPressed) {
-
         std::string newPath = std::string();
-        bool success = openFile(&newPath);
+        bool success = openFileDialog(&newPath);
 
         if (success) {
             shaderManager->SetShader(newPath);

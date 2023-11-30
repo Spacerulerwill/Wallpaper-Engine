@@ -1,4 +1,6 @@
-#pragma once
+#ifndef LOG_H
+#define LOG_H
+
 #include <memory>
 #include <spdlog/spdlog.h>
 
@@ -31,3 +33,5 @@ private:
 #define LOG_INFO 
 #define LOG_TRACE 
 #endif
+
+#endif // !LOG_H
