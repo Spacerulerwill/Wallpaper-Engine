@@ -23,6 +23,8 @@ add_executable(${PROJECT_NAME}
     src/opengl/Window.hpp
     src/util/Log.cpp
     src/util/Log.hpp
+    src/util/OS.cpp
+    src/util/OS.hpp
 )
 
 add_subdirectory(submodules/glfw)
