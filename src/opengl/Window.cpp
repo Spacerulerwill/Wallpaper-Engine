@@ -7,20 +7,20 @@ Window::Window(unsigned int width, unsigned int height, const char* name) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    p_Window = glfwCreateWindow(width, height, name, NULL, NULL);
+    pWindow = glfwCreateWindow(width, height, name, NULL, NULL);
 
-    if (p_Window == NULL)
+    if (pWindow == NULL)
     {
         throw std::runtime_error("Failed to create GLFW Window");
     }
 }
 
 Window::~Window() {
-    glfwDestroyWindow(p_Window);
+    glfwDestroyWindow(pWindow);
 }
 
 void Window::Bind() const {
-    glfwMakeContextCurrent(p_Window);
+    glfwMakeContextCurrent(pWindow);
 }
 
 void Window::Unbind() const {
@@ -28,23 +28,23 @@ void Window::Unbind() const {
 }
 
 void Window::SetShouldClose(int value) {
-    glfwSetWindowShouldClose(p_Window, value);
+    glfwSetWindowShouldClose(pWindow, value);
 }
 
 bool Window::ShouldClose() const {
-    return glfwWindowShouldClose(p_Window);
+    return glfwWindowShouldClose(pWindow);
 }
 
 void Window::SwapBuffers() {
-    glfwSwapBuffers(p_Window);
+    glfwSwapBuffers(pWindow);
 }
 
 GLFWwindow* Window::GetWindow() const {
-    return p_Window;
+    return pWindow;
 }
 
 WindowDimensions Window::GetDimensions() const {
     WindowDimensions dim{};
-    glfwGetWindowSize(p_Window, &dim.width, &dim.height);
+    glfwGetWindowSize(pWindow, &dim.width, &dim.height);
     return dim;
 }

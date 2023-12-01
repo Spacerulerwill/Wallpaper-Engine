@@ -1,6 +1,5 @@
 #include <core/Application.hpp>
-#include <system_error>
-#include <unordered_map>
+#include <stdexcept>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
 
@@ -12,7 +11,7 @@
 #include <util/Log.hpp>
 #include <util/OS.hpp>
 
-Application::Application() : p_WallpaperDir(GetWallpaper())
+Application::Application() : pWallpaperDir(GetWallpaper())
 {
 
 }
@@ -23,57 +22,77 @@ void Application::Run()
         throw std::runtime_error("Failed to initialise GLFW!");
     }
 
-    // Create windows
+    /*
+    Create 2 windows. The first being a window the size of the desktop which is attatched
+    to the desktop wallpaper which cannot be moved or interacted with at all apart from by
+    the second window, which is smaller movable non resizable control menu.
+    */
     RECT desktopRect = GetDesktopRect();
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    p_WallpaperWindow = std::make_unique<Window>(1920, 1080, "");
+    pWallpaperWindow = std::make_unique<Window>(1920, 1080, "");
     HWND desktopWallaperHwnd = GetWallpaperHwnd();
-    HWND wallpaperWindowHwnd = glfwGetWin32Window(p_WallpaperWindow->GetWindow());
+    HWND wallpaperWindowHwnd = glfwGetWin32Window(pWallpaperWindow->GetWindow());
     SetParent(wallpaperWindowHwnd, desktopWallaperHwnd);
 
     glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
     glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
-    p_ImGUIWindow = std::make_unique<Window>(400, 400, "Wallpaper Engine");
+    pImGUIWindow = std::make_unique<Window>(400, 400, "Wallpaper Engine");
 
-    p_WallpaperWindow->Bind();
+    pWallpaperWindow->Bind();
 
-    // initialise GLAD
+    // Initialise GLAD and load OpenGL function pointers
     if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)))
     {
         throw std::runtime_error("Failed to intialise GLAD!");
     }
 
-    p_ShaderManager = std::make_unique<ShaderManager>();
-    p_ShaderManager->SetFragmentShader("res/default.frag", p_WallpaperWindow->GetDimensions());
+    // Create our shader manager and set it to use the default shader
+    pShaderManager = std::make_unique<ShaderManager>();
+    pShaderManager->SetFragmentShader("res/default.frag", pWallpaperWindow->GetDimensions());
     ImGui::CreateContext();
 
-    // ImGui context creationg and start up
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    io.IniFilename = NULL; // disable imgui.ini
+    /*
+    ImGUI setup. Tell ImGUI to not have a imgui.ini file, so that the position and size of widgets
+    will not perisist between program executions.
+    */
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.IniFilename = NULL;
     ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(p_ImGUIWindow->GetWindow(), true);
+    ImGui_ImplGlfw_InitForOpenGL(pImGUIWindow->GetWindow(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
 
+    /*
+    We are rendering a fullscreen quad to our wallpaper window by hardcoding the vertices for it in the
+    vertex shader. This means that no VBO or any buffer objects are required however OpenGL requires there
+    to be a non default VAO bound always when we want to draw, so here we create one and never use it again
+    to enable us to draw our fullscreen quad.
+    */
     GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    // application loop
-    while (!p_ImGUIWindow->ShouldClose()) {
-        // render wallpaper window
-        p_WallpaperWindow->Bind();
-        SendDefaultUniforms();
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
+    /*
+    Main application loop, we loop whilst the ImGUI window is open as the user should not be able to interact
+    with the wallpaper window
+    */
+    while (!pImGUIWindow->ShouldClose()) {
+        // Process ImGUI interacts
+        ProcessImGUI();
+
+        // This will send builtin uniforms to the shaders such as iTime, iResolution, iMouse.
+        UpdateBuiltinUniforms();
+
+        // Part 1: Drawing to wallpaper window
+        pWallpaperWindow->Bind();
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        p_WallpaperWindow->SwapBuffers();
+        pWallpaperWindow->SwapBuffers();
 
-        CheckImGUIButtons();
-
-        // render ImGUI window
-        // -----------------------
-        p_ImGUIWindow->Bind();
+        // Part 2: Draw ImGUI Widgets to ImGUI windoww
+        pImGUIWindow->Bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -83,29 +102,29 @@ void Application::Run()
         ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-        m_isLoadShaderButtonPressed = ImGui::Button("Load Shader");
+        mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
         ImGui::SameLine();
 
         ImGui::End();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        p_ImGUIWindow->SwapBuffers();
+        pImGUIWindow->SwapBuffers();
         glfwPollEvents();
 
     }
-    SetWallpaper(p_WallpaperDir);
+    // Final cleanup, we reset the users wallpaper to what it was before and delete our VAO
+    SetWallpaper(pWallpaperDir);
     glDeleteVertexArrays(1, &vao);
 }
 
-
-void Application::CheckImGUIButtons()
+void Application::ProcessImGUI()
 {
-    if (m_isLoadShaderButtonPressed) {
+    if (mIsLoadShaderButtonPressed) {
         std::string newPath = std::string();
         bool success = openFileDialog(&newPath);
 
         if (success) {
-            p_ShaderManager->SetFragmentShader(newPath, p_WallpaperWindow->GetDimensions());
+            pShaderManager->SetFragmentShader(newPath, pWallpaperWindow->GetDimensions());
         }
         else {
             LOG_ERROR("Failed to load shader");
@@ -113,19 +132,19 @@ void Application::CheckImGUIButtons()
     }
 }
 
-void Application::SendDefaultUniforms()
+void Application::UpdateBuiltinUniforms()
 {
-    // send mouse uniform if needed
-    if (p_ShaderManager->BuiltinUniformsLocations.mousePos != -1) {
+    // Update mouse uniform only if required
+    if (pShaderManager->mBuiltinUniformsLocations.mousePos != -1) {
         POINT p;
         if (GetCursorPos(&p))
         {
-            glUniform2f(p_ShaderManager->BuiltinUniformsLocations.mousePos, static_cast<float>(p.x), static_cast<float>(p.y));
+            glUniform2f(pShaderManager->mBuiltinUniformsLocations.mousePos, static_cast<float>(p.x), static_cast<float>(p.y));
         }
     }
 
-    // send time if needed
-    if (p_ShaderManager->BuiltinUniformsLocations.time != -1) {
-        glUniform1f(p_ShaderManager->BuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
+    // Update time uniform only if required
+    if (pShaderManager->mBuiltinUniformsLocations.time != -1) {
+        glUniform1f(pShaderManager->mBuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
     }
 }

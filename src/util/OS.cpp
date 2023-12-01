@@ -1,20 +1,17 @@
 #include <ShObjIdl.h>
 #include <util/OS.hpp>
 
-// Get the directory of the currently active wallpaper in Windows 10
 wchar_t* GetWallpaper() {
     wchar_t buf[512];
     SystemParametersInfoW(SPI_GETDESKWALLPAPER, 512, buf, 0);
     return &buf[0];
 }
 
-// Set the Windows 10 wallpaper to the path specified
 void SetWallpaper(wchar_t* path)
 {
     SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, static_cast<void*>(path), SPIF_UPDATEINIFILE);
 }
 
-// open a Windows 10 file dialog window
 bool openFileDialog(std::string* sFilePath)
 {
     //  CREATE FILE OBJECT INSTANCE

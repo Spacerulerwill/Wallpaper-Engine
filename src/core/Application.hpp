@@ -10,13 +10,13 @@
 class Application
 {
 private:
-    std::unique_ptr<ShaderManager> p_ShaderManager = nullptr;
-    std::unique_ptr<Window> p_WallpaperWindow = nullptr;
-    std::unique_ptr<Window> p_ImGUIWindow = nullptr;
-    wchar_t* p_WallpaperDir;
-    void CheckImGUIButtons();
-    void SendDefaultUniforms();
-    bool m_isLoadShaderButtonPressed = false;
+    std::unique_ptr<ShaderManager> pShaderManager = nullptr;
+    std::unique_ptr<Window> pWallpaperWindow = nullptr;
+    std::unique_ptr<Window> pImGUIWindow = nullptr;
+    wchar_t* pWallpaperDir;
+    void ProcessImGUI();
+    void UpdateBuiltinUniforms();
+    bool mIsLoadShaderButtonPressed = false;
 public:
     Application();
     void Run();

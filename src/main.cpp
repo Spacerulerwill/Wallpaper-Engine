@@ -1,11 +1,9 @@
-#include <any>
 #include <core/Application.hpp>
 #include <system_error>
 #include <util/Log.hpp>
 
 int main() {
     Log::Init();
-
     try {
         Application app;
         app.Run();

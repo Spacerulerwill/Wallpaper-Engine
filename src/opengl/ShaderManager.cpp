@@ -1,11 +1,11 @@
 #include <fstream>
 #include <opengl/ShaderManager.hpp>
 #include <sstream>
-#include <system_error>
+#include <stdexcept>
 #include <util/Log.hpp>
 
 ShaderManager::ShaderManager() {
-    bool loadedDefaultVertexShader = LoadShader(GL_VERTEX_SHADER, &u_VertexShader, "res/default.vert");
+    bool loadedDefaultVertexShader = LoadShader(GL_VERTEX_SHADER, &uVertexShader, "res/default.vert");
 
     if (!loadedDefaultVertexShader) {
         throw std::runtime_error("Default vertex shader loading failed. Terminating program.");
@@ -13,8 +13,8 @@ ShaderManager::ShaderManager() {
 }
 
 ShaderManager::~ShaderManager() {
-    glDeleteShader(u_VertexShader);
-    glDeleteProgram(u_ShaderProgramID);
+    glDeleteShader(uVertexShader);
+    glDeleteProgram(uShaderProgramID);
 }
 
 bool ShaderManager::LoadShader(GLenum shaderType, GLuint* shader, const std::string& path) {
@@ -49,7 +49,6 @@ bool ShaderManager::ParseShader(const std::string& fragmentPath, std::string* ou
     }
 
     *out = ss.str();
-
 
     if (stream.bad()) {
         LOG_ERROR("Failed to parse shader " + fragmentPath + " due to bad stream!");
@@ -101,17 +100,17 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
         return false;
     }
 
-    glDeleteProgram(u_ShaderProgramID);
-    u_ShaderProgramID = glCreateProgram();
+    glDeleteProgram(uShaderProgramID);
+    uShaderProgramID = glCreateProgram();
 
-    glAttachShader(u_ShaderProgramID, u_VertexShader);
-    glAttachShader(u_ShaderProgramID, fragmentShader);
+    glAttachShader(uShaderProgramID, uVertexShader);
+    glAttachShader(uShaderProgramID, fragmentShader);
 
-    glLinkProgram(u_ShaderProgramID);
+    glLinkProgram(uShaderProgramID);
 
     GLint valid = GL_FALSE;
-    glValidateProgram(u_ShaderProgramID);
-    glGetProgramiv(u_ShaderProgramID, GL_VALIDATE_STATUS, &valid);
+    glValidateProgram(uShaderProgramID);
+    glGetProgramiv(uShaderProgramID, GL_VALIDATE_STATUS, &valid);
 
     if (valid == GL_FALSE) {
         LOG_TRACE("Failed to validate program for fragment shader " + fragmentPath);
@@ -119,15 +118,15 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     }
 
     glDeleteShader(fragmentShader);
-    glUseProgram(u_ShaderProgramID);
+    glUseProgram(uShaderProgramID);
 
-    BuiltinUniformsLocations.time = glGetUniformLocation(u_ShaderProgramID, "iTime");
-    BuiltinUniformsLocations.resolution = glGetUniformLocation(u_ShaderProgramID, "iResolution");
+    mBuiltinUniformsLocations.time = glGetUniformLocation(uShaderProgramID, "iTime");
+    mBuiltinUniformsLocations.resolution = glGetUniformLocation(uShaderProgramID, "iResolution");
 
-    if (BuiltinUniformsLocations.resolution != -1) {
-        glUniform2f(BuiltinUniformsLocations.resolution, static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
+    if (mBuiltinUniformsLocations.resolution != -1) {
+        glUniform2f(mBuiltinUniformsLocations.resolution, static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
     }
-    BuiltinUniformsLocations.mousePos = glGetUniformLocation(u_ShaderProgramID, "iMouse");
+    mBuiltinUniformsLocations.mousePos = glGetUniformLocation(uShaderProgramID, "iMouse");
 
     LOG_INFO("Loaded fragment shader " + fragmentPath);
     return true;

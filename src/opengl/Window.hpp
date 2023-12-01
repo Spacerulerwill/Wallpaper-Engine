@@ -11,7 +11,7 @@ struct WindowDimensions {
 
 class Window {
 private:
-    GLFWwindow* p_Window = nullptr;
+    GLFWwindow* pWindow = nullptr;
 public:
     Window(unsigned int width, unsigned int height, const char* title);
     ~Window();

@@ -16,9 +16,8 @@ struct BuiltinUniformsLocationsStruct {
 class ShaderManager
 {
 private:
-    GLuint u_ShaderProgramID = 0;
-    GLuint u_VertexShader = 0;
-    std::unordered_map<GLint, std::any> m_UniformMap;
+    GLuint uShaderProgramID = 0;
+    GLuint uVertexShader = 0;
     bool LoadShader(GLenum shaderType, GLuint* shader, const std::string& path);
     bool ParseShader(const std::string& filepath, std::string* out);
     bool CompileShader(GLenum type, const std::string& source, GLuint* shaderIn);
@@ -26,7 +25,7 @@ public:
     ShaderManager();
     ~ShaderManager();
     bool SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions);
-    BuiltinUniformsLocationsStruct BuiltinUniformsLocations;
+    BuiltinUniformsLocationsStruct mBuiltinUniformsLocations;
 };
 
 #endif // !SHADER_MANAGER_H
