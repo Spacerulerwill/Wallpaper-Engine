@@ -1,41 +1,78 @@
-#include "ShaderManager.hpp"
-#include <algorithm>
+#include <fstream>
+#include <opengl/ShaderManager.hpp>
 #include <sstream>
-#include <string>
+#include <system_error>
 #include <util/Log.hpp>
-#include <vector>
 
-std::string ShaderManager::ParseShader(const std::string& filepath)
+ShaderManager::ShaderManager() {
+    bool loadedDefaultVertexShader = LoadShader(GL_VERTEX_SHADER, &u_VertexShader, "res/default.vert");
+
+    if (!loadedDefaultVertexShader) {
+        throw std::runtime_error("Default vertex shader loading failed. Terminating program.");
+    }
+}
+
+ShaderManager::~ShaderManager() {
+    glDeleteShader(u_VertexShader);
+    glDeleteProgram(u_ShaderProgramID);
+}
+
+bool ShaderManager::LoadShader(GLenum shaderType, GLuint* shader, const std::string& path) {
+    std::string source;
+    bool parsed = ParseShader(path, &source);
+    if (!parsed) {
+        return false;
+    }
+
+    bool compiled = CompileShader(shaderType, source, shader);
+    if (!compiled) {
+        return false;
+    }
+
+    return true;
+}
+
+bool ShaderManager::ParseShader(const std::string& fragmentPath, std::string* out)
 {
-    std::ifstream stream(filepath);
+    std::ifstream stream(fragmentPath);
 
     if (stream.fail()) {
-        LOG_ERROR("Could not find shader file: " + filepath);
-        return "-1";
+        LOG_ERROR("Could not find shader file: " + fragmentPath);
+        return false;
     }
 
     std::string line;
     std::stringstream ss;
+
     while (getline(stream, line)) {
         ss << line << "\n";
     }
-    return ss.str();
+
+    *out = ss.str();
+
+
+    if (stream.bad()) {
+        LOG_ERROR("Failed to parse shader " + fragmentPath + " due to bad stream!");
+        return false;
+    }
+    return true;
 }
 
-unsigned int ShaderManager::CompileShader(unsigned int type, std::string& source) {
-    unsigned int id = glCreateShader(type);
-    const char* sourceStr = source.c_str();
-    glShaderSource(id, 1, &sourceStr, nullptr);
+bool ShaderManager::CompileShader(GLenum type, const std::string& source, GLuint* shaderIn)
+{
+    GLuint id = glCreateShader(type);
+    const char* sourceCStr = source.c_str();
+    glShaderSource(id, 1, &sourceCStr, nullptr);
     glCompileShader(id);
 
-    int result;
+    GLint result;
     glGetShaderiv(id, GL_COMPILE_STATUS, &result);
     if (result == GL_FALSE) {
-        int length;
+        GLint length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+
         char* msg = new char[length];
         glGetShaderInfoLog(id, length, &length, msg);
-
         if (type == GL_VERTEX_SHADER) {
             LOG_ERROR("Failed to compile vertex shader");
         }
@@ -45,167 +82,53 @@ unsigned int ShaderManager::CompileShader(unsigned int type, std::string& source
         LOG_ERROR(msg);
         glDeleteShader(id);
         delete[] msg;
-        return -1;
+
+        return false;
     }
 
-    return id;
+    *shaderIn = id;
+    return true;
 }
 
-unsigned int ShaderManager::CreateShader(std::string& vertex_source, std::string& fragmement_source) {
-
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertex_source);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmement_source);
-
-    if (vs == -1 || fs == -1) {
-        glDeleteProgram(program);
-        return -1;
-    }
-
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-}
-
-void ShaderManager::ClearUniformMap()
+bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions)
 {
-    for (auto it = m_UniformMap.begin(); it != m_UniformMap.end(); ++it) {
-        delete it->second.var;
-    }
-    m_UniformMap.clear();
-}
+    GLuint fragmentShader;
+    bool loadedFragmentShader = LoadShader(GL_FRAGMENT_SHADER, &fragmentShader, fragmentPath);
 
-ShaderManager::ShaderManager()
-{
-
-}
-
-ShaderManager::~ShaderManager()
-{
-    glDeleteProgram(u_ShaderProgramID);
-    ClearUniformMap();
-}
-
-std::unordered_map<std::string, Uniform> ShaderManager::getUniformMap() const
-{
-    return m_UniformMap;
-}
-
-std::string ShaderManager::getFragmentPath() const
-{
-    return m_FragmentShaderPath;
-}
-
-void ShaderManager::Bind() const
-{
-    glUseProgram(u_ShaderProgramID);
-}
-
-void ShaderManager::Unbind() const
-{
-    glUseProgram(0);
-}
-
-void ShaderManager::SetShader(const std::string& fragment_path, WindowDimensions dim)
-{
-
-    std::string vertexSource = ParseShader(m_VertexShaderPath);
-    std::string fragmentSource = ParseShader(fragment_path);
-
-    if (vertexSource == "-1" || fragmentSource == "-1") {
-        return;
-    }
-
-    unsigned int newProgram = CreateShader(vertexSource, fragmentSource);
-
-    if (newProgram == -1) {
-        return;
+    if (!loadedFragmentShader) {
+        LOG_ERROR("Failed to load fragment shader: " + fragmentPath);
+        glDeleteShader(fragmentShader);
+        return false;
     }
 
     glDeleteProgram(u_ShaderProgramID);
-    ClearUniformMap();
-    m_FragmentShaderPath = fragment_path;
-    m_MouseUniformLoc = -1;
-    m_TimeUniformLoc = -1;
-    u_ShaderProgramID = newProgram;
+    u_ShaderProgramID = glCreateProgram();
 
+    glAttachShader(u_ShaderProgramID, u_VertexShader);
+    glAttachShader(u_ShaderProgramID, fragmentShader);
+
+    glLinkProgram(u_ShaderProgramID);
+
+    GLint valid = GL_FALSE;
+    glValidateProgram(u_ShaderProgramID);
+    glGetProgramiv(u_ShaderProgramID, GL_VALIDATE_STATUS, &valid);
+
+    if (valid == GL_FALSE) {
+        LOG_TRACE("Failed to validate program for fragment shader " + fragmentPath);
+        return false;
+    }
+
+    glDeleteShader(fragmentShader);
     glUseProgram(u_ShaderProgramID);
 
-    GLuint i;
-    GLint count;
+    BuiltinUniformsLocations.time = glGetUniformLocation(u_ShaderProgramID, "iTime");
+    BuiltinUniformsLocations.resolution = glGetUniformLocation(u_ShaderProgramID, "iResolution");
 
-    GLint size; // size of the variable
-    GLenum type; // type of the variable (float, vec3c or mat4, etc)
-
-    const GLsizei bufSize = 16; // maximum name length
-    GLchar name[bufSize]; // variable name in GLSL
-    GLsizei length; // name length
-
-    glGetProgramiv(u_ShaderProgramID, GL_ACTIVE_UNIFORMS, &count);
-
-    for (i = 0; i < count; i++)
-    {
-        glGetActiveUniform(u_ShaderProgramID, (GLuint)i, bufSize, &length, &size, &type, name);
-
-        // default uniforms
-        if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
-            glUniform2f(static_cast<GLint>(i), static_cast<float>(dim.width), static_cast<float>(dim.height));
-        }
-        else if (strcmp(name, "iTime") == 0 && type == GL_FLOAT) {
-            m_TimeUniformLoc = i;
-        }
-        else if (strcmp(name, "iMouse") == 0 && type == GL_FLOAT_VEC2) {
-            m_MouseUniformLoc = i;
-        }
-        else {
-            // insert into map non default uniforms for use in ImGUI menu
-            // WTF WAS I THINKING? Stupid memory leak
-            switch (type) {
-            case GL_FLOAT: {
-                m_UniformMap.insert({ name, Uniform{ i, type, (void*)new float(1.0f)} });
-                break;
-            }
-            case GL_INT: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int(1)} });
-                break;
-            }
-            case GL_INT_VEC2: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[2] {0, 0}} });
-                break;
-            }
-            case GL_INT_VEC3: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[3] {0, 0, 0}} });
-                break;
-            }
-            case GL_INT_VEC4: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new int[4] {0, 0, 0, 0}} });
-                break;
-            }
-            case GL_FLOAT_VEC2: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[2] {0.0f, 0.0f}} });
-                break;
-            }
-            case GL_FLOAT_VEC3: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[3] {0.0f, 0.0f, 0.0f}} });
-                break;
-            }
-            case GL_FLOAT_VEC4: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new float[4] {0.0f, 0.0f, 0.0f, 0.0f}} });
-                break;
-            }
-            case GL_BOOL: {
-                m_UniformMap.insert({ name, Uniform{i, type, (void*)new bool(false)} });
-                break;
-            }
-            }
-        }
+    if (BuiltinUniformsLocations.resolution != -1) {
+        glUniform2f(BuiltinUniformsLocations.resolution, static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
     }
-    LOG_INFO("Loaded shader " + fragment_path);
+    BuiltinUniformsLocations.mousePos = glGetUniformLocation(u_ShaderProgramID, "iMouse");
+
+    LOG_INFO("Loaded fragment shader " + fragmentPath);
+    return true;
 }

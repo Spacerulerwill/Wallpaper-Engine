@@ -38,17 +38,16 @@ void Application::Run()
     p_WallpaperWindow->Bind();
 
     // initialise GLAD
-    // ---------------
     if (!gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)))
     {
         throw std::runtime_error("Failed to intialise GLAD!");
     }
 
     p_ShaderManager = std::make_unique<ShaderManager>();
-    p_ShaderManager->SetShader("res/default.frag", p_WallpaperWindow->GetDimensions());
+    p_ShaderManager->SetFragmentShader("res/default.frag", p_WallpaperWindow->GetDimensions());
+    ImGui::CreateContext();
 
     // ImGui context creationg and start up
-    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.IniFilename = NULL; // disable imgui.ini
     ImGui::StyleColorsDark();
@@ -60,60 +59,12 @@ void Application::Run()
     glBindVertexArray(vao);
 
     // application loop
-    // ---------------
     while (!p_ImGUIWindow->ShouldClose()) {
         // render wallpaper window
-        // -----------------------
         p_WallpaperWindow->Bind();
         SendDefaultUniforms();
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
-        // update non default uniforms
-        std::unordered_map<std::string, Uniform>map = p_ShaderManager->getUniformMap();
-        for (auto it = map.begin(); it != map.end(); ++it) {
-            unsigned int loc = it->second.location;
-            GLenum type = it->second.type;
-
-            switch (type) {
-            case GL_FLOAT: {
-                glUniform1f(loc, *(float*)it->second.var);
-                break;
-            }
-            case GL_INT: {
-                glUniform1i(loc, *(int*)it->second.var);
-                break;
-            }
-            case GL_INT_VEC2: {
-                glUniform2iv(loc, 1, (int*)it->second.var);
-                break;
-            }
-            case GL_INT_VEC3: {
-                glUniform3iv(loc, 1, (int*)it->second.var);
-                break;
-            }
-            case GL_INT_VEC4: {
-                glUniform4iv(loc, 1, (int*)it->second.var);
-                break;
-            }
-            case GL_FLOAT_VEC2: {
-                glUniform2fv(loc, 1, (float*)it->second.var);
-                break;
-            }
-            case GL_FLOAT_VEC3: {
-                glUniform3fv(loc, 1, (float*)it->second.var);
-                break;
-            }
-            case GL_FLOAT_VEC4: {
-                glUniform4fv(loc, 1, (float*)it->second.var);
-                break;
-            }
-            case GL_BOOL: {
-                glUniform1i(loc, *(bool*)it->second.var);
-                break;
-            }
-            }
-        }
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         p_WallpaperWindow->SwapBuffers();
@@ -134,52 +85,6 @@ void Application::Run()
         ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
         m_isLoadShaderButtonPressed = ImGui::Button("Load Shader");
         ImGui::SameLine();
-        ImGui::Text(p_ShaderManager->getFragmentPath().c_str());
-
-        // create ImGUI elements for non default uniforms
-        for (auto it = map.begin(); it != map.end(); ++it) {
-            const char* name = it->first.c_str();
-            unsigned int loc = it->second.location;
-            GLenum type = it->second.type;
-            switch (type) {
-            case GL_FLOAT: {
-                ImGui::SliderFloat(name, (float*)it->second.var, 0.0f, 10.0f);
-                break;
-            }
-            case GL_INT: {
-                ImGui::SliderInt(name, (int*)it->second.var, 0, 100);
-                break;
-            }
-            case GL_INT_VEC2: {
-                ImGui::SliderInt2(name, (int*)it->second.var, 0, 100);
-                break;
-            }
-            case GL_INT_VEC3: {
-                ImGui::SliderInt3(name, (int*)it->second.var, 0, 100);
-                break;
-            }
-            case GL_INT_VEC4: {
-                ImGui::SliderInt4(name, (int*)it->second.var, 0, 100);
-                break;
-            }
-            case GL_FLOAT_VEC2: {
-                ImGui::SliderFloat2(name, (float*)it->second.var, 0, 10.0f);
-                break;
-            }
-            case GL_FLOAT_VEC3: {
-                ImGui::SliderFloat3(name, (float*)it->second.var, 0, 10.0f);
-                break;
-            }
-            case GL_FLOAT_VEC4: {
-                ImGui::SliderFloat4(name, (float*)it->second.var, 0, 10.0f);
-                break;
-            }
-            case GL_BOOL: {
-                ImGui::Checkbox(name, (bool*)it->second.var);
-                break;
-            }
-            }
-        }
 
         ImGui::End();
         ImGui::Render();
@@ -200,7 +105,7 @@ void Application::CheckImGUIButtons()
         bool success = openFileDialog(&newPath);
 
         if (success) {
-            p_ShaderManager->SetShader(newPath, p_WallpaperWindow->GetDimensions());
+            p_ShaderManager->SetFragmentShader(newPath, p_WallpaperWindow->GetDimensions());
         }
         else {
             LOG_ERROR("Failed to load shader");
@@ -211,16 +116,16 @@ void Application::CheckImGUIButtons()
 void Application::SendDefaultUniforms()
 {
     // send mouse uniform if needed
-    if (p_ShaderManager->m_MouseUniformLoc != -1) {
+    if (p_ShaderManager->BuiltinUniformsLocations.mousePos != -1) {
         POINT p;
         if (GetCursorPos(&p))
         {
-            glUniform2f(p_ShaderManager->m_MouseUniformLoc, static_cast<float>(p.x), static_cast<float>(p.y));
+            glUniform2f(p_ShaderManager->BuiltinUniformsLocations.mousePos, static_cast<float>(p.x), static_cast<float>(p.y));
         }
     }
 
     // send time if needed
-    if (p_ShaderManager->m_TimeUniformLoc != -1) {
-        glUniform1f(p_ShaderManager->m_TimeUniformLoc, static_cast<float>(glfwGetTime()));
+    if (p_ShaderManager->BuiltinUniformsLocations.time != -1) {
+        glUniform1f(p_ShaderManager->BuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
     }
 }

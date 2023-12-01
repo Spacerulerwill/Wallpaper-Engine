@@ -15,11 +15,11 @@ private:
     std::unique_ptr<Window> p_ImGUIWindow = nullptr;
     wchar_t* p_WallpaperDir;
     void CheckImGUIButtons();
+    void SendDefaultUniforms();
     bool m_isLoadShaderButtonPressed = false;
 public:
     Application();
     void Run();
-    void SendDefaultUniforms();
 };
 
 #endif // !APPLICATION_H

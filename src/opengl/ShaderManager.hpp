@@ -1,47 +1,32 @@
-#pragma once
+#ifndef SHADER_MANAGER_H
+#define SHADER_MANAGER_H
 
 #include <any>
-#include <fstream>
 #include <gl.h>
-#include <GLFW/glfw3.h>
-#include <memory>
 #include <opengl/Window.hpp>
 #include <string>
 #include <unordered_map>
 
-struct Uniform {
-    unsigned int location;
-    GLenum type;
-    void* var;
+struct BuiltinUniformsLocationsStruct {
+    GLint time = -1;
+    GLint resolution = -1;
+    GLint mousePos = -1;
 };
 
 class ShaderManager
 {
 private:
-    unsigned int u_ShaderProgramID = 0;
-
-    const char* m_VertexShaderPath = "res/default.vert";
-    std::string m_FragmentShaderPath = "";
-
-    std::string ParseShader(const std::string& filepath);
-    unsigned int CompileShader(unsigned int type, std::string& source);
-    unsigned int CreateShader(std::string& vertex_source, std::string& fragmement_source);
-
-    std::unordered_map<std::string, Uniform> m_UniformMap;
-    void ClearUniformMap();
-
+    GLuint u_ShaderProgramID = 0;
+    GLuint u_VertexShader = 0;
+    std::unordered_map<GLint, std::any> m_UniformMap;
+    bool LoadShader(GLenum shaderType, GLuint* shader, const std::string& path);
+    bool ParseShader(const std::string& filepath, std::string* out);
+    bool CompileShader(GLenum type, const std::string& source, GLuint* shaderIn);
 public:
     ShaderManager();
     ~ShaderManager();
-
-    std::unordered_map<std::string, Uniform> getUniformMap() const;
-    std::string getFragmentPath() const;
-
-    void Bind() const;
-    void Unbind() const;
-    void SetShader(const std::string& fragment_path, WindowDimensions dim);
-
-    int m_TimeUniformLoc = -1;
-    int m_MouseUniformLoc = -1;
+    bool SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions);
+    BuiltinUniformsLocationsStruct BuiltinUniformsLocations;
 };
 
+#endif // !SHADER_MANAGER_H
