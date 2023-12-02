@@ -3,14 +3,20 @@
 
 #include <any>
 #include <gl.h>
+#include <unordered_map>
 #include <opengl/Window.hpp>
 #include <string>
 #include <unordered_map>
 
 struct BuiltinUniformsLocationsStruct {
-    GLint time = -1;
-    GLint resolution = -1;
-    GLint mousePos = -1;
+    GLint time = GL_INVALID_INDEX;
+    GLint mousePos = GL_INVALID_INDEX;
+};
+
+struct Uniform {
+    GLint location;
+    GLenum type;
+    std::any var;
 };
 
 class ShaderManager
@@ -26,6 +32,7 @@ public:
     ~ShaderManager();
     bool SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions);
     BuiltinUniformsLocationsStruct mBuiltinUniformsLocations;
+    std::unordered_map<std::string, Uniform> mUniforms;
 };
 
 #endif // !SHADER_MANAGER_H

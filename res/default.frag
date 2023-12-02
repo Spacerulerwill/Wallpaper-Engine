@@ -7,10 +7,9 @@
 // http://www.fractalforums.com/new-theories-and-research/very-simple-formula-for-fractal-patterns/
 
 #version 330 core
-
 uniform float iTime;
 uniform vec2 iResolution;
-uniform float timeMultiplier;
+uniform float timeMultiplier = 1.0;
 
 uniform vec4 color;
 

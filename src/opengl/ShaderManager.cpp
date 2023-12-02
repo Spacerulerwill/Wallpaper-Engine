@@ -91,6 +91,28 @@ bool ShaderManager::CompileShader(GLenum type, const std::string& source, GLuint
 
 bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions)
 {
+
+    for (const auto& [key, value] : mUniforms) {
+        switch (value.type) {
+        case GL_INT:
+        case GL_INT_VEC2:
+        case GL_INT_VEC3:
+        case GL_INT_VEC4:
+        case GL_BOOL: {
+            delete[] std::any_cast<GLint*>(value.var);
+            break;
+        }
+        case GL_FLOAT:
+        case GL_FLOAT_VEC2:
+        case GL_FLOAT_VEC3:
+        case GL_FLOAT_VEC4: {
+            delete[] std::any_cast<GLfloat*>(value.var);
+            break;
+        }
+        }
+    }
+    mUniforms.clear();
+
     GLuint fragmentShader;
     bool loadedFragmentShader = LoadShader(GL_FRAGMENT_SHADER, &fragmentShader, fragmentPath);
 
@@ -120,13 +142,86 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     glDeleteShader(fragmentShader);
     glUseProgram(uShaderProgramID);
 
-    mBuiltinUniformsLocations.time = glGetUniformLocation(uShaderProgramID, "iTime");
-    mBuiltinUniformsLocations.resolution = glGetUniformLocation(uShaderProgramID, "iResolution");
+    GLint count;
+    GLint size;
+    GLenum type;
+    const GLsizei bufSize = 16;
+    GLchar name[bufSize];
+    GLsizei length;
+    glGetProgramiv(uShaderProgramID, GL_ACTIVE_UNIFORMS, &count);
+    for (GLuint i = 0; i < count; i++)
+    {
 
-    if (mBuiltinUniformsLocations.resolution != -1) {
-        glUniform2f(mBuiltinUniformsLocations.resolution, static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
+        glGetActiveUniform(uShaderProgramID, i, bufSize, &length, &size, &type, name);
+        if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
+            glUniform2f(glGetUniformLocation(uShaderProgramID, "iResolution"), static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
+        }
+        else if (strcmp(name, "iTime") == 0 && type == GL_FLOAT) {
+            mBuiltinUniformsLocations.time = glGetUniformLocation(uShaderProgramID, "iTime");
+        }
+        else if (strcmp(name, "iMouse") == 0 && type == GL_FLOAT_VEC2) {
+            mBuiltinUniformsLocations.mousePos = glGetUniformLocation(uShaderProgramID, "iMouse");
+        }
+        else {
+            // insert into map non default uniforms for use in ImGUI menu
+            switch (type) {
+            case GL_FLOAT: {
+                GLfloat* val = new GLfloat[1]{};
+                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), val);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT, val }));
+                break;
+            }
+            case GL_INT: {
+                GLint* val = new GLint[1]{};
+                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT, val }));
+                break;
+            }
+            case GL_INT_VEC2: {
+                GLint* vec = new GLint[2]{};
+                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC2, vec }));
+                break;
+            }
+            case GL_INT_VEC3: {
+                GLint* vec = new GLint[3]{};
+                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC3, vec }));
+                break;
+            }
+            case GL_INT_VEC4: {
+                GLint* vec = new GLint[4]{};
+                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC4, vec }));
+                break;
+            }
+            case GL_FLOAT_VEC2: {
+                GLfloat* vec = new GLfloat[2]{};
+                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC2, vec }));
+                break;
+            }
+            case GL_FLOAT_VEC3: {
+                GLfloat* vec = new GLfloat[3]{};
+                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC3, vec }));
+                break;
+            }
+            case GL_FLOAT_VEC4: {
+                GLfloat* vec = new GLfloat[4]{};
+                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC4, vec }));
+                break;
+            }
+            case GL_BOOL: {
+                GLint* val = new GLint[1]{};
+                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_BOOL, val }));
+                break;
+            }
+            }
+        }
     }
-    mBuiltinUniformsLocations.mousePos = glGetUniformLocation(uShaderProgramID, "iMouse");
 
     LOG_INFO("Loaded fragment shader " + fragmentPath);
     return true;

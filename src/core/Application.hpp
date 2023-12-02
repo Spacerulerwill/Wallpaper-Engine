@@ -15,7 +15,8 @@ private:
     std::unique_ptr<Window> pImGUIWindow = nullptr;
     wchar_t* pWallpaperDir;
     void ProcessImGUI();
-    void UpdateBuiltinUniforms();
+    void DrawImGUIControlMenu();
+    void UpdateUniforms();
     bool mIsLoadShaderButtonPressed = false;
 public:
     Application();

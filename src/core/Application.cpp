@@ -11,6 +11,8 @@
 #include <util/Log.hpp>
 #include <util/OS.hpp>
 
+#include <any>
+
 Application::Application() : pWallpaperDir(GetWallpaper())
 {
 
@@ -77,21 +79,18 @@ void Application::Run()
     with the wallpaper window
     */
     while (!pImGUIWindow->ShouldClose()) {
-        // Process ImGUI interacts
-        ProcessImGUI();
-
-        // This will send builtin uniforms to the shaders such as iTime, iResolution, iMouse.
-        UpdateBuiltinUniforms();
-
-        // Part 1: Drawing to wallpaper window
         pWallpaperWindow->Bind();
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        UpdateUniforms();
+        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glDrawArrays(GL_TRIANGLES, 0, 6);
         pWallpaperWindow->SwapBuffers();
 
-        // Part 2: Draw ImGUI Widgets to ImGUI windoww
+        ProcessImGUI();
+
+        // render ImGUI window
+        // -----------------------
         pImGUIWindow->Bind();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -99,11 +98,8 @@ void Application::Run()
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
-        ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
-        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-        ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
-        mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
-        ImGui::SameLine();
+
+        DrawImGUIControlMenu();
 
         ImGui::End();
         ImGui::Render();
@@ -132,10 +128,62 @@ void Application::ProcessImGUI()
     }
 }
 
-void Application::UpdateBuiltinUniforms()
+void Application::DrawImGUIControlMenu()
 {
+    ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
+    ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+    ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
+
+    for (auto it = pShaderManager->mUniforms.begin(); it != pShaderManager->mUniforms.end(); ++it) {
+        const char* name = it->first.c_str();
+        unsigned int loc = it->second.location;
+        GLenum type = it->second.type;;
+        switch (type) {
+        case GL_INT: {
+            ImGui::SliderInt(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+            break;
+        }
+        case GL_INT_VEC2: {
+            ImGui::SliderInt2(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+            break;
+        }
+        case GL_INT_VEC3: {
+            ImGui::SliderInt3(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+            break;
+        }
+        case GL_INT_VEC4: {
+            ImGui::SliderInt4(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+            break;
+        }
+        case GL_FLOAT: {
+            ImGui::SliderFloat(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
+            break;
+        }
+        case GL_FLOAT_VEC2: {
+            ImGui::SliderFloat2(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
+            break;
+        }
+        case GL_FLOAT_VEC3: {
+            ImGui::SliderFloat3(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
+            break;
+        }
+        case GL_FLOAT_VEC4: {
+            ImGui::SliderFloat4(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
+            break;
+        }
+        case GL_BOOL: {
+            ImGui::Checkbox(name, reinterpret_cast<bool*>(std::any_cast<int*>(it->second.var)));
+        }
+        }
+    }
+}
+
+void Application::UpdateUniforms()
+{
+    // First part is to send builtin uniforms
     // Update mouse uniform only if required
-    if (pShaderManager->mBuiltinUniformsLocations.mousePos != -1) {
+    if (pShaderManager->mBuiltinUniformsLocations.mousePos != GL_INVALID_INDEX) {
         POINT p;
         if (GetCursorPos(&p))
         {
@@ -144,7 +192,51 @@ void Application::UpdateBuiltinUniforms()
     }
 
     // Update time uniform only if required
-    if (pShaderManager->mBuiltinUniformsLocations.time != -1) {
+    if (pShaderManager->mBuiltinUniformsLocations.time != GL_INVALID_INDEX) {
         glUniform1f(pShaderManager->mBuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
+    }
+    // Second part is to update all the uniforms that aren't builtins
+    for (auto it = pShaderManager->mUniforms.begin(); it != pShaderManager->mUniforms.end(); ++it) {
+        GLint loc = it->second.location;
+        GLenum type = it->second.type;
+
+        switch (type) {
+        case GL_FLOAT: {
+            glUniform1f(loc, *std::any_cast<GLfloat*>(it->second.var));
+            break;
+        }
+        case GL_FLOAT_VEC2: {
+            glUniform2fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
+            break;
+        }
+        case GL_FLOAT_VEC3: {
+            glUniform3fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
+            break;
+        }
+        case GL_FLOAT_VEC4: {
+            glUniform4fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
+            break;
+        }
+        case GL_INT: {
+            glUniform1i(loc, *std::any_cast<GLint*>(it->second.var));
+            break;
+        }
+        case GL_INT_VEC2: {
+            glUniform2iv(loc, 1, std::any_cast<GLint*>(it->second.var));
+            break;
+        }
+        case GL_INT_VEC3: {
+            glUniform3iv(loc, 1, std::any_cast<GLint*>(it->second.var));
+            break;
+        }
+        case GL_INT_VEC4: {
+            glUniform4iv(loc, 1, std::any_cast<GLint*>(it->second.var));
+            break;
+        }
+        case GL_BOOL: {
+            glUniform1i(loc, *std::any_cast<GLint*>(it->second.var));
+            break;
+        }
+        }
     }
 }
