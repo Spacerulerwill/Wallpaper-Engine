@@ -148,8 +148,7 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     glDeleteShader(fragmentShader);
     glUseProgram(uShaderProgramID);
 
-    mBuiltinUniformsLocations.mousePos = GL_INVALID_INDEX;
-    mBuiltinUniformsLocations.time = GL_INVALID_INDEX;
+    mBuiltinUniformsLocations = BuiltinUniformsLocationsStruct{};
 
     GLint count;
     GLint size;
