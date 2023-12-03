@@ -33,9 +33,9 @@ uniform vec2 iMouse;
 uniform sampler2D iChannel0;
 
 #define S(a, b, t) smoothstep(a, b, t)
-uniform int NUM_LAYERS;
-uniform float timeMultiplier;
-uniform bool SIMPLE;
+uniform int NUM_LAYERS = 5;
+uniform float timeMultiplier = 1.0;
+uniform bool SIMPLE = false;
 
 float N21(vec2 p) {
 	vec3 a = fract(vec3(p.xyx) * vec3(213.897, 653.453, 253.098));

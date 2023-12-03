@@ -19,11 +19,11 @@ uniform float iTime;
 uniform vec2 iResolution;
 uniform vec2 iMouse;
 
-uniform int iterations;
-uniform float zoom;
-uniform float tile;
-uniform float speed;
-uniform float mouseScale;
+uniform int iterations = 20;
+uniform float zoom = 1.0;
+uniform float tile = 1.0;
+uniform float speed = 0.001;
+uniform float mouseScale = 1.0;
 
 void main()
 {

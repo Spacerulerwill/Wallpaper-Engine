@@ -95,14 +95,20 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     for (const auto& [key, value] : mUniforms) {
         switch (value.type) {
         case GL_INT:
+        case GL_BOOL: {
+            delete std::any_cast<GLint*>(value.var);
+            break;
+        }
         case GL_INT_VEC2:
         case GL_INT_VEC3:
-        case GL_INT_VEC4:
-        case GL_BOOL: {
+        case GL_INT_VEC4: {
             delete[] std::any_cast<GLint*>(value.var);
             break;
         }
-        case GL_FLOAT:
+        case GL_FLOAT: {
+            delete std::any_cast<GLfloat*>(value.var);
+            break;
+        }
         case GL_FLOAT_VEC2:
         case GL_FLOAT_VEC3:
         case GL_FLOAT_VEC4: {
@@ -142,6 +148,9 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     glDeleteShader(fragmentShader);
     glUseProgram(uShaderProgramID);
 
+    mBuiltinUniformsLocations.mousePos = GL_INVALID_INDEX;
+    mBuiltinUniformsLocations.time = GL_INVALID_INDEX;
+
     GLint count;
     GLint size;
     GLenum type;
@@ -151,7 +160,6 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     glGetProgramiv(uShaderProgramID, GL_ACTIVE_UNIFORMS, &count);
     for (GLuint i = 0; i < count; i++)
     {
-
         glGetActiveUniform(uShaderProgramID, i, bufSize, &length, &size, &type, name);
         if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
             glUniform2f(glGetUniformLocation(uShaderProgramID, "iResolution"), static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
@@ -166,57 +174,57 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
             // insert into map non default uniforms for use in ImGUI menu
             switch (type) {
             case GL_FLOAT: {
-                GLfloat* val = new GLfloat[1]{};
+                GLfloat* val = new GLfloat{};
                 glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT, val }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT, val }));
                 break;
             }
             case GL_INT: {
-                GLint* val = new GLint[1]{};
+                GLint* val = new GLint{};
                 glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT, val }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT, val }));
                 break;
             }
             case GL_INT_VEC2: {
                 GLint* vec = new GLint[2]{};
                 glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC2, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC2, vec }));
                 break;
             }
             case GL_INT_VEC3: {
                 GLint* vec = new GLint[3]{};
                 glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC3, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC3, vec }));
                 break;
             }
             case GL_INT_VEC4: {
                 GLint* vec = new GLint[4]{};
                 glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_INT_VEC4, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC4, vec }));
                 break;
             }
             case GL_FLOAT_VEC2: {
                 GLfloat* vec = new GLfloat[2]{};
                 glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC2, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC2, vec }));
                 break;
             }
             case GL_FLOAT_VEC3: {
                 GLfloat* vec = new GLfloat[3]{};
                 glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC3, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC3, vec }));
                 break;
             }
             case GL_FLOAT_VEC4: {
                 GLfloat* vec = new GLfloat[4]{};
                 glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_FLOAT_VEC4, vec }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC4, vec }));
                 break;
             }
             case GL_BOOL: {
-                GLint* val = new GLint[1]{};
+                GLint* val = new GLint{};
                 glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ static_cast<GLint>(i), GL_BOOL, val }));
+                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_BOOL, val }));
                 break;
             }
             }
