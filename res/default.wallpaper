@@ -1,5 +1,3 @@
-#section metadata
-name: Cool Space Thing
 
 #section shader
 
@@ -126,6 +124,6 @@ void main() {
 	seed2 = floor(seed2 * iResolution.x);
 	vec3 rnd2 = nrand3( seed2 );
 	starcolor += vec4(pow(rnd2.y,40.0));
-	
+;
 	FragColor = mix(freqs[3]-.3, 1., v) * vec4(1.5*freqs[2] * t * t* t , 1.2*freqs[1] * t * t, freqs[3]*t, 1.0)+c2+starcolor;
 }
