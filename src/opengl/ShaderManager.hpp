@@ -9,8 +9,13 @@
 #include <unordered_map>
 
 struct BuiltinUniformsLocationsStruct {
+<<<<<<< HEAD
     GLint time = static_cast<GLint>(GL_INVALID_INDEX);
     GLint mousePos = static_cast<GLint>(GL_INVALID_INDEX);
+=======
+    GLint time = GL_INVALID_INDEX;
+    GLint mousePos = GL_INVALID_INDEX;
+>>>>>>> b31729cad49b1e985faa3d5b51b8d023a1f69ea0
 };
 
 struct Uniform {
