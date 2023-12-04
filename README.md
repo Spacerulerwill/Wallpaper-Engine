@@ -9,7 +9,7 @@ https://github.com/Spacerulerwill/Wallpaper-Engine/assets/36770307/611977cb-444c
 Here is an example of a basic wallpaper:
 
 ```glsl
-#shader metadata
+#section metadata
 name: "Super Cool Shader"
 
 #section shader
