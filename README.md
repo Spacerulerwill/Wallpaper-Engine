@@ -28,7 +28,7 @@ void main(){
 
 There are sections to a wallpaper: `metadata` and `shader`. The `metadata` section allows you to write metadata about the wallpaper in YAML format. Currently the only
 metadata option is `name` which is a string and is shown on the control section if set. The `metadata` section is optional. The other section, `shader` is where the glsl 
-source code and is mandatory. You get access to a few default uniforms `iResolution`, `iMouse` and `iTime`. Any other uniforms you add will appear on the control menu
+source code goes and is mandatory. You get access to a few default uniforms `iResolution`, `iMouse` and `iTime`. Any other uniforms you add will appear on the control menu
 for you to use them.
 
 # Build Instructions
