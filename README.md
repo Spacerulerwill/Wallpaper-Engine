@@ -4,11 +4,15 @@ A wallpaper engine that allows you to run custom fragment shaders on your wallpa
 # Video Demo
 https://github.com/Spacerulerwill/Wallpaper-Engine/assets/36770307/611977cb-444c-4373-9f9e-0adfbdbfa399
 
-# Writing Shaders
+# Writing Wallpapers
 
-When writing shaders you get access to a couple default uniforms:
+Here is an example of a basic wallpaper:
 
 ```glsl
+#shader metadata
+name: "Super Cool Shader"
+
+#section shader
 #version 330 core
 
 out vec4 FragColor;
@@ -22,7 +26,10 @@ void main(){
 }
 ```
 
-Any other uniforms will be automatically added to the ImGUI menu so you can change them at any time
+There are sections to a wallpaper: `metadata` and `shader`. The `metadata` section allows you to write metadata about the wallpaper in YAML format. Currently the only
+metadata option is `name` which is a string and is shown on the control section if set. The `metadata` section is optional. The other section, `shader` is where the glsl 
+source code and is mandatory. You get access to a few default uniforms `iResolution`, `iMouse` and `iTime`. Any other uniforms you add will appear on the control menu
+for you to use them.
 
 # Build Instructions
 
