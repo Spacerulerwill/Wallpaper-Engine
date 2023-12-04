@@ -52,6 +52,11 @@ public:
     BuiltinUniformsLocations mBuiltinUniformsLocations;
     WallpaperMetadata mMetadata{};
     bool hasWallpaper = false;
+
+    WallpaperManager(const WallpaperManager& arg) = delete;
+    WallpaperManager(const WallpaperManager&& arg) = delete;
+    WallpaperManager& operator=(const WallpaperManager& arg) = delete;
+    WallpaperManager& operator=(const WallpaperManager&& arg) = delete;
 };
 
 #endif // !SHADER_MANAGER_H

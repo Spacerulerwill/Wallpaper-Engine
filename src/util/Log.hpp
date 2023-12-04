@@ -8,6 +8,11 @@ class Log {
 public:
     static void Init();
     inline static std::shared_ptr<spdlog::logger>& GetLogger() { return sLogger; }
+
+    Log(const Log& arg) = delete;
+    Log(const Log&& arg) = delete;
+    Log& operator=(const Log& arg) = delete;
+    Log& operator=(const Log&& arg) = delete;
 private:
     static std::shared_ptr<spdlog::logger> sLogger;
 };
