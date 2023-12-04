@@ -4,9 +4,7 @@
 [submodule "submodules/spdlog"]
 	path = submodules/spdlog
 	url = https://github.com/gabime/spdlog
-<<<<<<< HEAD
 [submodule "submodules/yaml-cpp"]
 	path = submodules/yaml-cpp
 	url = https://github.com/jbeder/yaml-cpp
-=======
->>>>>>> b31729cad49b1e985faa3d5b51b8d023a1f69ea0
+
