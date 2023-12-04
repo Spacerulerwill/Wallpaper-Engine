@@ -17,8 +17,8 @@ add_executable(${PROJECT_NAME}
     src/main.cpp
     src/core/Application.cpp
     src/core/Application.hpp
-    src/opengl/ShaderManager.cpp
-    src/opengl/ShaderManager.hpp
+    src/opengl/WallpaperManager.cpp
+    src/opengl/WallpaperManager.hpp
     src/opengl/Window.cpp
     src/opengl/Window.hpp
     src/util/Log.cpp
@@ -52,5 +52,3 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC glfw
     PUBLIC yaml-cpp
 )
-
-file(COPY res DESTINATION ${CMAKE_BINARY_DIR})

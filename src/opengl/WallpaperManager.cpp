@@ -1,63 +1,83 @@
 #include <fstream>
-#include <opengl/ShaderManager.hpp>
+#include <opengl/WallpaperManager.hpp>
 #include <sstream>
 #include <stdexcept>
 #include <util/Log.hpp>
+#include <yaml-cpp/yaml.h>
 
-ShaderManager::ShaderManager() {
-    bool loadedDefaultVertexShader = LoadShader(GL_VERTEX_SHADER, &uVertexShader, "res/default.vert");
+#define DEFAULT_VERTEX_SHADER_PATH "res/vertex.glsl"
 
-    if (!loadedDefaultVertexShader) {
-        throw std::runtime_error("Default vertex shader loading failed. Terminating program.");
-    }
+WallpaperManager::WallpaperManager() {
+    LoadVertexShader();
 }
 
-ShaderManager::~ShaderManager() {
+WallpaperManager::~WallpaperManager() {
     glDeleteShader(uVertexShader);
     glDeleteProgram(uShaderProgramID);
 }
 
-bool ShaderManager::LoadShader(GLenum shaderType, GLuint* shader, const std::string& path) {
-    std::string source;
-    bool parsed = ParseShader(path, &source);
-    if (!parsed) {
-        return false;
-    }
-
-    bool compiled = CompileShader(shaderType, source, shader);
-    if (!compiled) {
-        return false;
-    }
-
-    return true;
-}
-
-bool ShaderManager::ParseShader(const std::string& fragmentPath, std::string* out)
+void WallpaperManager::LoadVertexShader()
 {
-    std::ifstream stream(fragmentPath);
+    std::ifstream stream(DEFAULT_VERTEX_SHADER_PATH);
 
     if (stream.fail()) {
-        LOG_ERROR("Could not find shader file: " + fragmentPath);
+        throw std::runtime_error("Failed to open file stream to " DEFAULT_VERTEX_SHADER_PATH " to load default vertex shader.");
+    }
+
+    if (stream.bad()) {
+        throw std::runtime_error("Stream in bad state! Can't open " DEFAULT_VERTEX_SHADER_PATH " to load default vertex shader.");
+    }
+
+    std::stringstream ss;
+    ss << stream.rdbuf();
+    std::string vertexSource = ss.str();
+
+    CompileShader(GL_VERTEX_SHADER, vertexSource, &uVertexShader);
+}
+
+bool WallpaperManager::ParseWallpaperSource(const std::string& path, WallpaperSources* out) const
+{
+    std::ifstream stream(path);
+
+    if (stream.fail()) {
+        LOG_ERROR("Failed to open wallpaper: " + path);
         return false;
     }
 
     std::string line;
-    std::stringstream ss;
+    std::stringstream ss[2];
+    WallpaperSection type = WallpaperSection::NONE;
+
+    bool foundShaderSection = false;
 
     while (getline(stream, line)) {
-        ss << line << "\n";
+        if (line.find("#section") != std::string::npos) {
+            if (line.find("metadata") != std::string::npos) {
+                type = WallpaperSection::METADATA;
+            }
+            else if (line.find("shader") != std::string::npos) {
+                foundShaderSection = true;
+                type = WallpaperSection::SHADER;
+            }
+        }
+        else if (type != WallpaperSection::NONE) {
+            ss[static_cast<int>(type)] << line << "\n";
+        }
     }
 
-    *out = ss.str();
-
-    if (stream.bad()) {
-        LOG_ERROR("Failed to parse shader " + fragmentPath + " due to bad stream!");
+    if (!foundShaderSection) {
+        LOG_ERROR("Wallpaper file must contain #section shader!");
         return false;
     }
+
+    *out = {
+        ss[static_cast<int>(WallpaperSection::METADATA)].str(),
+        ss[static_cast<int>(WallpaperSection::SHADER)].str()
+    };
     return true;
 }
 
-bool ShaderManager::CompileShader(GLenum type, const std::string& source, GLuint* shaderIn)
+bool WallpaperManager::CompileShader(GLenum type, const std::string& source, GLuint* shaderIn) const
 {
     GLuint id = glCreateShader(type);
     const char* sourceCStr = source.c_str();
@@ -80,8 +100,6 @@ bool ShaderManager::CompileShader(GLenum type, const std::string& source, GLuint
         }
         LOG_ERROR(msg);
         glDeleteShader(id);
-        delete[] msg;
-
         return false;
     }
 
@@ -89,9 +107,88 @@ bool ShaderManager::CompileShader(GLenum type, const std::string& source, GLuint
     return true;
 }
 
-bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDimensions windowDimensions)
+bool WallpaperManager::ParseWallpaperMetadata(const std::string& metadataYamlSource, WallpaperMetadata& metadata) const
 {
+    YAML::Node node = YAML::Load(metadataYamlSource);
 
+    try {
+        YAML::Node nameNode = node["name"];
+        metadata.name = nameNode.as<std::string>();
+    }
+    catch (const YAML::KeyNotFound& e) {
+        metadata.name = "";
+    }
+    catch (const YAML::BadConversion e) {
+        LOG_ERROR("Metadata 'name' must be a string!");
+        return false;
+    }
+}
+
+
+void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions windowDimensions)
+{
+    WallpaperSources wallpaperSources{};
+
+    // First of all, parse the wallpaper soure file into its seperate components (fragment shader and config yaml)
+    bool parsed = ParseWallpaperSource(path, &wallpaperSources);
+    if (!parsed) {
+        return;
+    }
+
+    // Try and compile the fragment shader
+    GLuint fragmentShader = 0;
+    bool compiled = CompileShader(GL_FRAGMENT_SHADER, wallpaperSources.fragmentShaderSource, &fragmentShader);
+    if (!compiled) {
+        return;
+    }
+
+    // Try and parse the metadata yaml
+    WallpaperMetadata metadata{};
+
+    if (wallpaperSources.metadataYamlSource != "") {
+        bool metadataParsed = false;
+
+        try {
+            metadataParsed = ParseWallpaperMetadata(wallpaperSources.metadataYamlSource, metadata);
+        }
+        catch (YAML::Exception e) {
+            glDeleteShader(fragmentShader);
+            LOG_ERROR(e.what());
+            return;
+        }
+
+        if (!metadataParsed) {
+            glDeleteShader(fragmentShader);
+            return;
+        }
+    }
+
+    // Try and create the new prgoram
+    GLuint program = glCreateProgram();
+
+    glAttachShader(program, uVertexShader);
+    glAttachShader(program, fragmentShader);
+    glLinkProgram(program);
+
+    GLint valid = GL_FALSE;
+    glValidateProgram(program);
+    glGetProgramiv(program, GL_VALIDATE_STATUS, &valid);
+
+    if (valid == GL_FALSE) {
+        LOG_TRACE("Failed to validate shader program for wallpaper " + path);
+        glDeleteProgram(program);
+        glDeleteShader(fragmentShader);
+        return;
+    }
+
+    // We have made it without any errors so we are safe to remove previous shader
+    glDeleteProgram(uShaderProgramID);
+    glDeleteShader(fragmentShader);
+    uShaderProgramID = program;
+    glUseProgram(uShaderProgramID);
+    mMetadata = metadata;
+
+    // clear uniform map of previous shader
     for (const auto& [key, value] : mUniforms) {
         switch (value.type) {
         case GL_INT:
@@ -119,37 +216,8 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
     }
     mUniforms.clear();
 
-    GLuint fragmentShader;
-    bool loadedFragmentShader = LoadShader(GL_FRAGMENT_SHADER, &fragmentShader, fragmentPath);
-
-    if (!loadedFragmentShader) {
-        LOG_ERROR("Failed to load fragment shader: " + fragmentPath);
-        glDeleteShader(fragmentShader);
-        return false;
-    }
-
-    glDeleteProgram(uShaderProgramID);
-    uShaderProgramID = glCreateProgram();
-
-    glAttachShader(uShaderProgramID, uVertexShader);
-    glAttachShader(uShaderProgramID, fragmentShader);
-
-    glLinkProgram(uShaderProgramID);
-
-    GLint valid = GL_FALSE;
-    glValidateProgram(uShaderProgramID);
-    glGetProgramiv(uShaderProgramID, GL_VALIDATE_STATUS, &valid);
-
-    if (valid == GL_FALSE) {
-        LOG_TRACE("Failed to validate program for fragment shader " + fragmentPath);
-        return false;
-    }
-
-    glDeleteShader(fragmentShader);
-    glUseProgram(uShaderProgramID);
-
-    mBuiltinUniformsLocations = BuiltinUniformsLocationsStruct{};
-
+    // Gather our shaders uniform values and store them in the mUniforms map
+    mBuiltinUniformsLocations = BuiltinUniformsLocations{};
     GLint count;
     GLint size;
     GLenum type;
@@ -229,7 +297,6 @@ bool ShaderManager::SetFragmentShader(const std::string& fragmentPath, WindowDim
             }
         }
     }
-
-    LOG_INFO("Loaded fragment shader " + fragmentPath);
-    return true;
+    hasWallpaper = true;
+    LOG_INFO("Loaded wallpaper: " + path);
 }

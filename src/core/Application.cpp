@@ -49,8 +49,8 @@ void Application::Run()
     }
 
     // Create our shader manager and set it to use the default shader
-    pShaderManager = std::make_unique<ShaderManager>();
-    pShaderManager->SetFragmentShader("res/default.frag", pWallpaperWindow->GetDimensions());
+    pWallpaperManager = std::make_unique<WallpaperManager>();
+    pWallpaperManager->TrySetWallpaper("res/default.wallpaper", pWallpaperWindow->GetDimensions());
     ImGui::CreateContext();
 
     /*
@@ -79,12 +79,16 @@ void Application::Run()
     with the wallpaper window
     */
     while (!pImGUIWindow->ShouldClose()) {
+
         pWallpaperWindow->Bind();
         UpdateUniforms();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        if (pWallpaperManager->hasWallpaper) {
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+
         pWallpaperWindow->SwapBuffers();
 
         ProcessImGUI();
@@ -120,7 +124,7 @@ void Application::ProcessImGUI()
         bool success = openFileDialog(&newPath);
 
         if (success) {
-            pShaderManager->SetFragmentShader(newPath, pWallpaperWindow->GetDimensions());
+            pWallpaperManager->TrySetWallpaper(newPath, pWallpaperWindow->GetDimensions());
         }
         else {
             LOG_ERROR("Failed to load shader");
@@ -132,10 +136,17 @@ void Application::DrawImGUIControlMenu()
 {
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
-    ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+
+    if (pWallpaperManager->mMetadata.name == "") {
+        ImGui::Begin("Control Menu", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    }
+    else {
+        ImGui::Begin(pWallpaperManager->mMetadata.name.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
+    }
+
     mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
 
-    for (auto it = pShaderManager->mUniforms.begin(); it != pShaderManager->mUniforms.end(); ++it) {
+    for (auto it = pWallpaperManager->mUniforms.begin(); it != pWallpaperManager->mUniforms.end(); ++it) {
         const char* name = it->first.c_str();
         unsigned int loc = it->second.location;
         GLenum type = it->second.type;;
@@ -173,7 +184,7 @@ void Application::DrawImGUIControlMenu()
             break;
         }
         case GL_BOOL: {
-            ImGui::Checkbox(name, reinterpret_cast<bool*>(std::any_cast<int*>(it->second.var)));
+            ImGui::Checkbox(name, reinterpret_cast<bool*>(std::any_cast<GLint*>(it->second.var)));
         }
         }
     }
@@ -183,20 +194,20 @@ void Application::UpdateUniforms()
 {
     // First part is to send builtin uniforms
     // Update mouse uniform only if required
-    if (pShaderManager->mBuiltinUniformsLocations.mousePos != GL_INVALID_INDEX) {
+    if (pWallpaperManager->mBuiltinUniformsLocations.mousePos != GL_INVALID_INDEX) {
         POINT p;
         if (GetCursorPos(&p))
         {
-            glUniform2f(pShaderManager->mBuiltinUniformsLocations.mousePos, static_cast<float>(p.x), static_cast<float>(p.y));
+            glUniform2f(pWallpaperManager->mBuiltinUniformsLocations.mousePos, static_cast<float>(p.x), static_cast<float>(p.y));
         }
     }
 
     // Update time uniform only if required
-    if (pShaderManager->mBuiltinUniformsLocations.time != GL_INVALID_INDEX) {
-        glUniform1f(pShaderManager->mBuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
+    if (pWallpaperManager->mBuiltinUniformsLocations.time != GL_INVALID_INDEX) {
+        glUniform1f(pWallpaperManager->mBuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
     }
     // Second part is to update all the uniforms that aren't builtins
-    for (auto it = pShaderManager->mUniforms.begin(); it != pShaderManager->mUniforms.end(); ++it) {
+    for (auto it = pWallpaperManager->mUniforms.begin(); it != pWallpaperManager->mUniforms.end(); ++it) {
         GLint loc = it->second.location;
         GLenum type = it->second.type;
 

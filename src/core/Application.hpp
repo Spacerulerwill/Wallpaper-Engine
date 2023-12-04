@@ -4,13 +4,13 @@
 #include <gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
-#include <opengl/ShaderManager.hpp>
+#include <opengl/WallpaperManager.hpp>
 #include <opengl/Window.hpp>
 
 class Application
 {
 private:
-    std::unique_ptr<ShaderManager> pShaderManager = nullptr;
+    std::unique_ptr<WallpaperManager> pWallpaperManager = nullptr;
     std::unique_ptr<Window> pWallpaperWindow = nullptr;
     std::unique_ptr<Window> pImGUIWindow = nullptr;
     wchar_t* pWallpaperDir;

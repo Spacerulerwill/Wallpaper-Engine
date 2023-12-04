@@ -1,3 +1,8 @@
+#section metadata
+name: Cool Space Thing
+
+#section shader
+
 // https://www.shadertoy.com/view/MlcBW7 ADAPTED FOR GLSL
 
 //CBS
@@ -9,7 +14,7 @@
 #version 330 core
 uniform float iTime;
 uniform vec2 iResolution;
-uniform float timeMultiplier = 1.0;
+uniform float timeMultiplier = 1.0; // Time Multiplier: 43, 65
 
 uniform vec4 color;
 
