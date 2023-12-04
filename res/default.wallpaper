@@ -1,4 +1,5 @@
-
+#section metadata
+name: Space
 #section shader
 
 // https://www.shadertoy.com/view/MlcBW7 ADAPTED FOR GLSL
