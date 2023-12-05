@@ -25,10 +25,6 @@ void WallpaperManager::LoadVertexShader()
         throw std::runtime_error("Failed to open file stream to " DEFAULT_VERTEX_SHADER_PATH " to load default vertex shader.");
     }
 
-    if (stream.bad()) {
-        throw std::runtime_error("Stream in bad state! Can't open " DEFAULT_VERTEX_SHADER_PATH " to load default vertex shader.");
-    }
-
     std::stringstream ss;
     ss << stream.rdbuf();
     std::string vertexSource = ss.str();
