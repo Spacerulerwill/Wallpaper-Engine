@@ -2,6 +2,7 @@
 #include <opengl/WallpaperManager.hpp>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 #include <util/Log.hpp>
 #include <yaml-cpp/yaml.h>
 
@@ -90,15 +91,15 @@ bool WallpaperManager::CompileShader(GLenum type, const std::string& source, GLu
         GLint length;
         glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
 
-        char* msg = new char[length];
-        glGetShaderInfoLog(id, length, &length, msg);
+        std::vector<GLchar> msg(length);
+        glGetShaderInfoLog(id, length, &length, msg.data());
         if (type == GL_VERTEX_SHADER) {
             LOG_ERROR("Failed to compile vertex shader");
         }
         else {
             LOG_ERROR("Failed to compile fragment shader");
         }
-        LOG_ERROR(msg);
+        LOG_ERROR(msg.data());
         glDeleteShader(id);
         return false;
     }
@@ -188,33 +189,10 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     glUseProgram(uShaderProgramID);
     mMetadata = metadata;
 
-    // clear uniform map of previous shader
-    for (const auto& [key, value] : mUniforms) {
-        switch (value.type) {
-        case GL_INT:
-        case GL_BOOL: {
-            delete std::any_cast<GLint*>(value.var);
-            break;
-        }
-        case GL_INT_VEC2:
-        case GL_INT_VEC3:
-        case GL_INT_VEC4: {
-            delete[] std::any_cast<GLint*>(value.var);
-            break;
-        }
-        case GL_FLOAT: {
-            delete std::any_cast<GLfloat*>(value.var);
-            break;
-        }
-        case GL_FLOAT_VEC2:
-        case GL_FLOAT_VEC3:
-        case GL_FLOAT_VEC4: {
-            delete[] std::any_cast<GLfloat*>(value.var);
-            break;
-        }
-        }
-    }
-    mUniforms.clear();
+    // Clear any uniforms from the previous shader
+    mIntUniforms.clear();
+    mFloatUniforms.clear();
+    mBoolUniforms.clear();
 
     // Gather our shaders uniform values and store them in the mUniforms map
     mBuiltinUniformsLocations = BuiltinUniformsLocations{};
@@ -240,58 +218,67 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
         else {
             // insert into map non default uniforms for use in ImGUI menu
             switch (type) {
-            case GL_FLOAT: {
-                GLfloat* val = new GLfloat{};
-                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT, val }));
-                break;
-            }
             case GL_INT: {
-                GLint* val = new GLint{};
-                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT, val }));
+                GLint val{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformiv(uShaderProgramID, loc, &val);
+                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(1, &val, loc)));
                 break;
             }
             case GL_INT_VEC2: {
-                GLint* vec = new GLint[2]{};
-                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC2, vec }));
+                GLint val[2]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformiv(uShaderProgramID, loc, &val[0]);
+                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(2, &val[0], loc)));
                 break;
             }
             case GL_INT_VEC3: {
-                GLint* vec = new GLint[3]{};
-                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC3, vec }));
+                GLint val[3]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformiv(uShaderProgramID, loc, &val[0]);
+                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(3, &val[0], loc)));
                 break;
             }
             case GL_INT_VEC4: {
-                GLint* vec = new GLint[4]{};
-                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_INT_VEC4, vec }));
+                GLint val[4]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformiv(uShaderProgramID, loc, &val[0]);
+                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(4, &val[0], loc)));
+                break;
+            }
+            case GL_FLOAT: {
+                GLfloat val{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformfv(uShaderProgramID, loc, &val);
+                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(1, &val, loc)));
                 break;
             }
             case GL_FLOAT_VEC2: {
-                GLfloat* vec = new GLfloat[2]{};
-                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC2, vec }));
+                GLfloat val[2]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformfv(uShaderProgramID, loc, &val[0]);
+                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(2, &val[0], loc)));
                 break;
             }
             case GL_FLOAT_VEC3: {
-                GLfloat* vec = new GLfloat[3]{};
-                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC3, vec }));
+                GLfloat val[3]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformfv(uShaderProgramID, loc, &val[0]);
+                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(3, &val[0], loc)));
                 break;
             }
             case GL_FLOAT_VEC4: {
-                GLfloat* vec = new GLfloat[4]{};
-                glGetUniformfv(uShaderProgramID, static_cast<GLint>(i), vec);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_FLOAT_VEC4, vec }));
+                GLfloat val[4]{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformfv(uShaderProgramID, loc, &val[0]);
+                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(4, &val[0], loc)));
                 break;
             }
             case GL_BOOL: {
-                GLint* val = new GLint{};
-                glGetUniformiv(uShaderProgramID, static_cast<GLint>(i), val);
-                mUniforms.insert(std::make_pair(std::string(name), Uniform{ glGetUniformLocation(uShaderProgramID, name), GL_BOOL, val }));
+                GLint val{};
+                GLint loc = glGetUniformLocation(uShaderProgramID, name);
+                glGetUniformiv(uShaderProgramID, loc, &val);
+                mBoolUniforms.insert(std::make_pair(std::string(name), Uniform<GLboolean>(1, reinterpret_cast<GLboolean*>(&val), loc)));
                 break;
             }
             }

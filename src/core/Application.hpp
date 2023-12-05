@@ -18,6 +18,7 @@ private:
     void DrawImGUIControlMenu();
     void UpdateUniforms();
     bool mIsLoadShaderButtonPressed = false;
+    bool mIsUnloadShaderButtonPressed = false;
 public:
     Application();
     void Run();

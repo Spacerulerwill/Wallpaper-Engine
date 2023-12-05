@@ -79,7 +79,6 @@ void Application::Run()
     with the wallpaper window
     */
     while (!pImGUIWindow->ShouldClose()) {
-
         pWallpaperWindow->Bind();
         UpdateUniforms();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -112,6 +111,7 @@ void Application::Run()
         glfwPollEvents();
 
     }
+
     // Final cleanup, we reset the users wallpaper to what it was before and delete our VAO
     SetWallpaper(pWallpaperDir);
     glDeleteVertexArrays(1, &vao);
@@ -130,6 +130,10 @@ void Application::ProcessImGUI()
             LOG_ERROR("Failed to load shader");
         }
     }
+
+    if (mIsUnloadShaderButtonPressed) {
+        pWallpaperManager->hasWallpaper = false;
+    }
 }
 
 void Application::DrawImGUIControlMenu()
@@ -145,48 +149,54 @@ void Application::DrawImGUIControlMenu()
     }
 
     mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
+    ImGui::SameLine();
+    mIsUnloadShaderButtonPressed = ImGui::Button("Unload Shader");
 
-    for (auto it = pWallpaperManager->mUniforms.begin(); it != pWallpaperManager->mUniforms.end(); ++it) {
+    // Controls for integer uniforms
+    for (auto it = pWallpaperManager->mIntUniforms.begin(); it != pWallpaperManager->mIntUniforms.end(); ++it) {
         const char* name = it->first.c_str();
-        unsigned int loc = it->second.location;
-        GLenum type = it->second.type;;
-        switch (type) {
-        case GL_INT: {
-            ImGui::SliderInt(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+        Uniform<GLint>* uniform = &it->second;
+        switch (uniform->elements.size()) {
+        case 1:
+            ImGui::SliderInt(name, uniform->elements.data(), 0, 100);
+            break;
+        case 2:
+            ImGui::SliderInt2(name, uniform->elements.data(), 0, 100);
+            break;
+        case 3:
+            ImGui::SliderInt3(name, uniform->elements.data(), 0, 100);
+            break;
+        case 4:
+            ImGui::SliderInt4(name, uniform->elements.data(), 0, 100);
             break;
         }
-        case GL_INT_VEC2: {
-            ImGui::SliderInt2(name, std::any_cast<GLint*> (it->second.var), 0, 100);
+    }
+
+    // Slides for float uniforms
+    for (auto it = pWallpaperManager->mFloatUniforms.begin(); it != pWallpaperManager->mFloatUniforms.end(); ++it) {
+        const char* name = it->first.c_str();
+        Uniform<GLfloat>* uniform = &it->second;
+        switch (uniform->elements.size()) {
+        case 1:
+            ImGui::SliderFloat(name, uniform->elements.data(), 0.0f, 100.0f);
+            break;
+        case 2:
+            ImGui::SliderFloat2(name, uniform->elements.data(), 0.0f, 100.0f);
+            break;
+        case 3:
+            ImGui::SliderFloat3(name, uniform->elements.data(), 0.0f, 100.0f);
+            break;
+        case 4:
+            ImGui::SliderFloat4(name, uniform->elements.data(), 0.0f, 100.0f);
             break;
         }
-        case GL_INT_VEC3: {
-            ImGui::SliderInt3(name, std::any_cast<GLint*> (it->second.var), 0, 100);
-            break;
-        }
-        case GL_INT_VEC4: {
-            ImGui::SliderInt4(name, std::any_cast<GLint*> (it->second.var), 0, 100);
-            break;
-        }
-        case GL_FLOAT: {
-            ImGui::SliderFloat(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
-            break;
-        }
-        case GL_FLOAT_VEC2: {
-            ImGui::SliderFloat2(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
-            break;
-        }
-        case GL_FLOAT_VEC3: {
-            ImGui::SliderFloat3(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
-            break;
-        }
-        case GL_FLOAT_VEC4: {
-            ImGui::SliderFloat4(name, std::any_cast<GLfloat*>(it->second.var), 0.0f, 10.0f);
-            break;
-        }
-        case GL_BOOL: {
-            ImGui::Checkbox(name, reinterpret_cast<bool*>(std::any_cast<GLint*>(it->second.var)));
-        }
-        }
+    }
+
+    // Checkboxes for bool uniforms
+    for (auto it = pWallpaperManager->mBoolUniforms.begin(); it != pWallpaperManager->mBoolUniforms.end(); ++it) {
+        const char* name = it->first.c_str();
+        Uniform<GLboolean>* uniform = &it->second;
+        ImGui::Checkbox(name, reinterpret_cast<bool*>(uniform->elements.data())); // TODO: Check this is okay?
     }
 }
 
@@ -206,48 +216,46 @@ void Application::UpdateUniforms()
     if (pWallpaperManager->mBuiltinUniformsLocations.time != GL_INVALID_INDEX) {
         glUniform1f(pWallpaperManager->mBuiltinUniformsLocations.time, static_cast<float>(glfwGetTime()));
     }
-    // Second part is to update all the uniforms that aren't builtins
-    for (auto it = pWallpaperManager->mUniforms.begin(); it != pWallpaperManager->mUniforms.end(); ++it) {
-        GLint loc = it->second.location;
-        GLenum type = it->second.type;
 
-        switch (type) {
-        case GL_FLOAT: {
-            glUniform1f(loc, *std::any_cast<GLfloat*>(it->second.var));
+    // Second part is to update all the uniforms that aren't builtins
+    for (auto it = pWallpaperManager->mIntUniforms.begin(); it != pWallpaperManager->mIntUniforms.end(); ++it) {
+        Uniform<GLint> uniform = it->second;
+        switch (uniform.elements.size()) {
+        case 1:
+            glUniform1iv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 2:
+            glUniform2iv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 3:
+            glUniform3iv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 4:
+            glUniform4iv(uniform.location, 1, uniform.elements.data());
             break;
         }
-        case GL_FLOAT_VEC2: {
-            glUniform2fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
+    }
+
+    for (auto it = pWallpaperManager->mFloatUniforms.begin(); it != pWallpaperManager->mFloatUniforms.end(); ++it) {
+        Uniform<GLfloat> uniform = it->second;
+        switch (uniform.elements.size()) {
+        case 1:
+            glUniform1fv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 2:
+            glUniform2fv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 3:
+            glUniform3fv(uniform.location, 1, uniform.elements.data());
+            break;
+        case 4:
+            glUniform4fv(uniform.location, 1, uniform.elements.data());
             break;
         }
-        case GL_FLOAT_VEC3: {
-            glUniform3fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
-            break;
-        }
-        case GL_FLOAT_VEC4: {
-            glUniform4fv(loc, 1, std::any_cast<GLfloat*>(it->second.var));
-            break;
-        }
-        case GL_INT: {
-            glUniform1i(loc, *std::any_cast<GLint*>(it->second.var));
-            break;
-        }
-        case GL_INT_VEC2: {
-            glUniform2iv(loc, 1, std::any_cast<GLint*>(it->second.var));
-            break;
-        }
-        case GL_INT_VEC3: {
-            glUniform3iv(loc, 1, std::any_cast<GLint*>(it->second.var));
-            break;
-        }
-        case GL_INT_VEC4: {
-            glUniform4iv(loc, 1, std::any_cast<GLint*>(it->second.var));
-            break;
-        }
-        case GL_BOOL: {
-            glUniform1i(loc, *std::any_cast<GLint*>(it->second.var));
-            break;
-        }
-        }
+    }
+
+    for (auto it = pWallpaperManager->mBoolUniforms.begin(); it != pWallpaperManager->mBoolUniforms.end(); ++it) {
+        Uniform<GLboolean> uniform = it->second;
+        glUniform1i(uniform.location, static_cast<GLint>(uniform.elements.at(0)));
     }
 }

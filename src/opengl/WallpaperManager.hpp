@@ -1,17 +1,21 @@
 #ifndef SHADER_MANAGER_H
 #define SHADER_MANAGER_H
 
-#include <any>
 #include <gl.h>
 #include <unordered_map>
 #include <opengl/Window.hpp>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
+template<typename T>
 struct Uniform {
     GLint location;
-    GLenum type;
-    std::any var;
+    std::vector<T> elements;
+
+    Uniform(size_t size, T* value, GLint location) : elements(std::vector<T>(value, value + size)), location(location) {
+
+    }
 };
 
 struct BuiltinUniformsLocations {
@@ -48,9 +52,13 @@ public:
     WallpaperManager();
     ~WallpaperManager();
     void TrySetWallpaper(const std::string& path, WindowDimensions);
-    std::unordered_map<std::string, Uniform> mUniforms;
-    BuiltinUniformsLocations mBuiltinUniformsLocations;
+
+    std::unordered_map<std::string, Uniform<GLint>> mIntUniforms;
+    std::unordered_map<std::string, Uniform<GLboolean>> mBoolUniforms;
+    std::unordered_map<std::string, Uniform<GLfloat>> mFloatUniforms;
+
     WallpaperMetadata mMetadata{};
+    BuiltinUniformsLocations mBuiltinUniformsLocations;
     bool hasWallpaper = false;
 
     WallpaperManager(const WallpaperManager& arg) = delete;
