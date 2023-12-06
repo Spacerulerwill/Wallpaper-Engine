@@ -11,8 +11,6 @@
 #include <util/Log.hpp>
 #include <util/OS.hpp>
 
-#include <any>
-
 Application::Application() : pWallpaperDir(GetWallpaper())
 {
 
@@ -31,7 +29,7 @@ void Application::Run()
     */
     RECT desktopRect = GetDesktopRect();
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
-    pWallpaperWindow = std::make_unique<Window>(1920, 1080, "");
+    pWallpaperWindow = std::make_unique<Window>(desktopRect.right, desktopRect.bottom, "");
     HWND desktopWallaperHwnd = GetWallpaperHwnd();
     HWND wallpaperWindowHwnd = glfwGetWin32Window(pWallpaperWindow->GetWindow());
     SetParent(wallpaperWindowHwnd, desktopWallaperHwnd);

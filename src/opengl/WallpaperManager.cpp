@@ -119,6 +119,11 @@ bool WallpaperManager::ParseWallpaperMetadata(const std::string& metadataYamlSou
         LOG_ERROR("Metadata 'name' must be a string!");
         return false;
     }
+
+    try {
+        YAML::Node uniformsNode = node["uniforms"];
+    }
+    catch (const YAML::KeyNotFound) {};
 }
 
 

@@ -18,6 +18,7 @@ struct Uniform {
     }
 };
 
+
 struct BuiltinUniformsLocations {
     GLint time = static_cast<GLint>(GL_INVALID_INDEX);
     GLint mousePos = static_cast<GLint>(GL_INVALID_INDEX);
