@@ -66,6 +66,7 @@ class WallpaperManager
 private:
     GLuint uShaderProgramID = 0;
     GLuint uVertexShader = 0;
+    GLuint uFragmentShader = 0;
 
     void LoadVertexShader();
     bool ParseWallpaperSource(const std::string& filepath, WallpaperSources* out) const;
@@ -86,6 +87,7 @@ public:
     WallpaperManager();
     ~WallpaperManager();
     bool TrySetWallpaper(const std::string& path, WindowDimensions);
+    void UnloadCurrentWallpaper();
 
     std::unordered_map<std::string, Uniform<GLint>> mIntUniforms;
     std::unordered_map<std::string, Uniform<GLboolean>> mBoolUniforms;

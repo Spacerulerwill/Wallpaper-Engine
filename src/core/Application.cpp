@@ -134,6 +134,7 @@ void Application::ProcessImGUI() const
 
     if (mIsUnloadWallpaperButtonPressed) {
         if (pWallpaperManager->hasWallpaper) {
+            pWallpaperManager->UnloadCurrentWallpaper();
             pWallpaperManager->hasWallpaper = false;
             pWallpaperWindow->SetHidden();
             SetWallpaper(mOriginalWallpaperPath);

@@ -274,17 +274,11 @@ bool WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     }
 
     // We have made it without any errors so we are safe to remove previous shader
-    glDeleteProgram(uShaderProgramID);
     glDeleteShader(fragmentShader);
+    UnloadCurrentWallpaper();
     uShaderProgramID = program;
     glUseProgram(uShaderProgramID);
     mMetadata = metadata;
-
-    // Clear any uniforms from the previous shader
-    mIntUniforms.clear();
-    mFloatUniforms.clear();
-    mBoolUniforms.clear();
-
     mIntUniforms = std::move(intUniforms);
     mFloatUniforms = std::move(floatUniforms);
     mBoolUniforms = std::move(boolUniforms);
@@ -355,4 +349,13 @@ bool WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     hasWallpaper = true;
     LOG_INFO("Loaded wallpaper: " + path);
     return true;
+}
+
+void WallpaperManager::UnloadCurrentWallpaper()
+{
+    glDeleteProgram(uShaderProgramID);
+    mMetadata = WallpaperMetadata{};
+    mIntUniforms.clear();
+    mFloatUniforms.clear();
+    mBoolUniforms.clear();
 }
