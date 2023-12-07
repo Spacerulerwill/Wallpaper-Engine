@@ -1,5 +1,13 @@
 #section metadata
 name: Space
+uniforms:
+  float:
+      timeMultiplier:
+        name: Time Multiplier
+        min: 0.0
+        max: 10.0
+  int: {}
+  bool: {}
 #section shader
 
 // https://www.shadertoy.com/view/MlcBW7 ADAPTED FOR GLSL

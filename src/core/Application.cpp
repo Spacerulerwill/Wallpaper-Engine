@@ -152,48 +152,48 @@ void Application::DrawImGUIControlMenu()
 
     // Controls for integer uniforms
     for (auto it = pWallpaperManager->mIntUniforms.begin(); it != pWallpaperManager->mIntUniforms.end(); ++it) {
-        const char* name = it->first.c_str();
         Uniform<GLint>* uniform = &it->second;
+        const char* name = uniform->metadata.name.c_str();
         switch (uniform->elements.size()) {
         case 1:
-            ImGui::SliderInt(name, uniform->elements.data(), 0, 100);
+            ImGui::SliderInt(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 2:
-            ImGui::SliderInt2(name, uniform->elements.data(), 0, 100);
+            ImGui::SliderInt2(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 3:
-            ImGui::SliderInt3(name, uniform->elements.data(), 0, 100);
+            ImGui::SliderInt3(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 4:
-            ImGui::SliderInt4(name, uniform->elements.data(), 0, 100);
+            ImGui::SliderInt4(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         }
     }
 
     // Slides for float uniforms
     for (auto it = pWallpaperManager->mFloatUniforms.begin(); it != pWallpaperManager->mFloatUniforms.end(); ++it) {
-        const char* name = it->first.c_str();
         Uniform<GLfloat>* uniform = &it->second;
+        const char* name = uniform->metadata.name.c_str();
         switch (uniform->elements.size()) {
         case 1:
-            ImGui::SliderFloat(name, uniform->elements.data(), 0.0f, 100.0f);
+            ImGui::SliderFloat(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 2:
-            ImGui::SliderFloat2(name, uniform->elements.data(), 0.0f, 100.0f);
+            ImGui::SliderFloat2(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 3:
-            ImGui::SliderFloat3(name, uniform->elements.data(), 0.0f, 100.0f);
+            ImGui::SliderFloat3(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         case 4:
-            ImGui::SliderFloat4(name, uniform->elements.data(), 0.0f, 100.0f);
+            ImGui::SliderFloat4(name, uniform->elements.data(), uniform->metadata.min, uniform->metadata.max);
             break;
         }
     }
 
     // Checkboxes for bool uniforms
     for (auto it = pWallpaperManager->mBoolUniforms.begin(); it != pWallpaperManager->mBoolUniforms.end(); ++it) {
-        const char* name = it->first.c_str();
         Uniform<GLboolean>* uniform = &it->second;
+        const char* name = uniform->metadata.name.c_str();
         ImGui::Checkbox(name, reinterpret_cast<bool*>(uniform->elements.data())); // TODO: Check this is okay?
     }
 }

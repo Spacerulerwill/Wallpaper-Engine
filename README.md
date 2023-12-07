@@ -10,26 +10,34 @@ Here is an example of a basic wallpaper:
 
 ```glsl
 #section metadata
-name: "Super Cool Shader"
+name: "Super Cool Shader" # the title of the shader
+uniforms
+  float: 
+    testFloat:            # name of the uniform in GLSL
+      name: Test Float    # the name that will be displayed next to the slider
+      min: 0.0            # the max slider value
+      max: 1000.0         # the max slider value
+  int: {}                 # we have no int uniforms
+  bool: {}                # we have no boolean uniforms
 
 #section shader
 #version 330 core
 
-out vec4 FragColor;
+out vec4 FragColor;       // Output color for pixel
 
 uniform vec2 iResolution; // Screen width and height
-uniform vec2 iMouse; // Mouse position on screen
-uniform float iTime; // Time in seconds since application started
+uniform vec2 iMouse;      // Mouse position on screen
+uniform float iTime;      // Time in seconds since application started
+
+uniform float testFloat; 
 
 void main(){
   FragColor = vec4(1.0);
 }
 ```
 
-There are sections to a wallpaper: `metadata` and `shader`. The `metadata` section allows you to write metadata about the wallpaper in YAML format. Currently the only
-metadata option is `name` which is a string and is shown on the control section if set. The `metadata` section is optional. The other section, `shader` is where the glsl 
-source code goes and is mandatory. You get access to a few default uniforms `iResolution`, `iMouse` and `iTime`. Any other uniforms you add will appear on the control menu
-for you to use them.
+There are sections to a wallpaper: `metadata` and `shader`. The `metadata` section allows you to write metadata about the wallpaper in YAML format. The other section, `shader` is where the glsl 
+source code goes and is mandatory. You get access to a few default uniforms `iResolution`, `iMouse` and `iTime`. Any other uniforms you add will appear on the control menu for you to use them.
 
 # Build Instructions
 

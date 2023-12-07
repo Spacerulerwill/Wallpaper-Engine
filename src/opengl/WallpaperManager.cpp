@@ -104,28 +104,115 @@ bool WallpaperManager::CompileShader(GLenum type, const std::string& source, GLu
     return true;
 }
 
-bool WallpaperManager::ParseWallpaperMetadata(const std::string& metadataYamlSource, WallpaperMetadata& metadata) const
-{
+bool WallpaperManager::ParseWallpaperMetadata(
+    const std::string& metadataYamlSource,
+    WallpaperMetadata& wallpaperMetadata,
+    std::unordered_map <std::string, Uniform<GLint>>& intUniforms,
+    std::unordered_map <std::string, Uniform<GLfloat>>& floatUniforms,
+    std::unordered_map <std::string, Uniform<GLboolean>>& boolUniforms
+) const {
     YAML::Node node = YAML::Load(metadataYamlSource);
 
     try {
         YAML::Node nameNode = node["name"];
-        metadata.name = nameNode.as<std::string>();
+        wallpaperMetadata.name = nameNode.as<std::string>();
     }
     catch (const YAML::KeyNotFound& e) {
-        metadata.name = "";
+        wallpaperMetadata.name = "";
     }
     catch (const YAML::BadConversion e) {
         LOG_ERROR("Metadata 'name' must be a string!");
         return false;
     }
 
-    try {
-        YAML::Node uniformsNode = node["uniforms"];
+    // Process float uniforms
+    YAML::Node uniforms = node["uniforms"];
+    auto floatUniformMetadata = uniforms["float"].as<std::unordered_map<std::string, UniformMetadata<GLfloat>>>();
+    for (auto it = floatUniformMetadata.begin(); it != floatUniformMetadata.end(); ++it) {
+        Uniform<GLfloat> uniform{};
+        uniform.metadata = it->second;
+        floatUniforms.insert(std::make_pair(it->first, uniform));
     }
-    catch (const YAML::KeyNotFound) {};
+
+    // Process int uniforms
+    auto intUniformMetadata = uniforms["int"].as<std::unordered_map<std::string, UniformMetadata<GLint>>>();
+    for (auto it = intUniformMetadata.begin(); it != intUniformMetadata.end(); ++it) {
+        Uniform<GLint> uniform{};
+        uniform.metadata = it->second;
+        intUniforms.insert(std::make_pair(it->first, uniform));
+    }
+
+    // Process bool uniforms
+    auto boolUniformMetadata = uniforms["bool"].as<std::unordered_map<std::string, UniformMetadata<GLboolean>>>();
+    for (auto it = boolUniformMetadata.begin(); it != boolUniformMetadata.end(); ++it) {
+        Uniform<GLboolean> uniform{};
+        uniform.metadata = it->second;
+        boolUniforms.insert(std::make_pair(it->first, uniform));
+    }
+    return true;
 }
 
+void WallpaperManager::AddIntUniform(std::string name, size_t count)
+{
+    std::vector<GLint> val(count);
+    GLint loc = glGetUniformLocation(uShaderProgramID, name.c_str());
+    glGetUniformiv(uShaderProgramID, loc, val.data());
+    auto find = mIntUniforms.find(name);
+    if (find == mIntUniforms.end()) {
+        UniformMetadata<GLint> metadata{
+           .name = std::string(name),
+           .min = DEFAULT_INT_SLIDER_MIN,
+           .max = DEFAULT_INT_SLIDER_MAX,
+        };
+        Uniform<GLint> uniform(1, val, loc, metadata);
+        mIntUniforms.insert(std::make_pair(name, uniform));
+    }
+    else {
+        (*find).second.location = loc;
+        (*find).second.elements = std::move(val);
+    }
+}
+
+
+void WallpaperManager::AddFloatUniform(std::string name, size_t count)
+{
+    std::vector<GLfloat> val(count);
+    GLfloat loc = glGetUniformLocation(uShaderProgramID, name.c_str());
+    glGetUniformfv(uShaderProgramID, loc, val.data());
+    auto find = mFloatUniforms.find(name);
+    if (find == mFloatUniforms.end()) {
+        UniformMetadata<GLfloat> metadata{
+            .name = std::string(name),
+            .min = DEFAULT_FLOAT_SLIDER_MIN,
+            .max = DEFAULT_FLOAT_SLIDER_MAX,
+        };
+        Uniform<GLfloat> uniform(1, val, loc, metadata);
+        mFloatUniforms.insert(std::make_pair(name, uniform));
+    }
+    else {
+        (*find).second.location = loc;
+        (*find).second.elements = std::move(val);
+    }
+}
+
+void WallpaperManager::AddBoolUniform(std::string name, size_t count)
+{
+    std::vector<GLboolean> val(count);
+    GLfloat loc = glGetUniformLocation(uShaderProgramID, name.c_str());
+    glGetUniformiv(uShaderProgramID, loc, reinterpret_cast<GLint*>(val.data()));
+    auto find = mBoolUniforms.find(name);
+    if (find == mBoolUniforms.end()) {
+        UniformMetadata<GLboolean> metadata{
+            .name = std::string(name),
+        };
+        Uniform<GLboolean> uniform(1, val, loc, metadata);
+        mBoolUniforms.insert(std::make_pair(name, uniform));
+    }
+    else {
+        (*find).second.location = loc;
+        (*find).second.elements = std::move(val);
+    }
+}
 
 void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions windowDimensions)
 {
@@ -145,13 +232,16 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     }
 
     // Try and parse the metadata yaml
+    std::unordered_map <std::string, Uniform<GLint>> intUniforms;
+    std::unordered_map <std::string, Uniform<GLfloat>> floatUniforms;
+    std::unordered_map <std::string, Uniform<GLboolean>> boolUniforms;
     WallpaperMetadata metadata{};
 
     if (wallpaperSources.metadataYamlSource != "") {
         bool metadataParsed = false;
 
         try {
-            metadataParsed = ParseWallpaperMetadata(wallpaperSources.metadataYamlSource, metadata);
+            metadataParsed = ParseWallpaperMetadata(wallpaperSources.metadataYamlSource, metadata, intUniforms, floatUniforms, boolUniforms);
         }
         catch (YAML::Exception e) {
             glDeleteShader(fragmentShader);
@@ -195,6 +285,10 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     mFloatUniforms.clear();
     mBoolUniforms.clear();
 
+    mIntUniforms = std::move(intUniforms);
+    mFloatUniforms = std::move(floatUniforms);
+    mBoolUniforms = std::move(boolUniforms);
+
     // Gather our shaders uniform values and store them in the mUniforms map
     mBuiltinUniformsLocations = BuiltinUniformsLocations{};
     GLint count;
@@ -220,66 +314,39 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
             // insert into map non default uniforms for use in ImGUI menu
             switch (type) {
             case GL_INT: {
-                GLint val{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformiv(uShaderProgramID, loc, &val);
-                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(1, &val, loc)));
+                AddIntUniform(name, 1);
                 break;
             }
             case GL_INT_VEC2: {
-                GLint val[2]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformiv(uShaderProgramID, loc, &val[0]);
-                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(2, &val[0], loc)));
+                AddIntUniform(name, 2);
                 break;
             }
             case GL_INT_VEC3: {
-                GLint val[3]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformiv(uShaderProgramID, loc, &val[0]);
-                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(3, &val[0], loc)));
+                AddIntUniform(name, 3);
                 break;
             }
             case GL_INT_VEC4: {
-                GLint val[4]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformiv(uShaderProgramID, loc, &val[0]);
-                mIntUniforms.insert(std::make_pair(std::string(name), Uniform<GLint>(4, &val[0], loc)));
+                AddIntUniform(name, 4);
                 break;
             }
             case GL_FLOAT: {
-                GLfloat val{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformfv(uShaderProgramID, loc, &val);
-                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(1, &val, loc)));
+                AddFloatUniform(name, 1);
                 break;
             }
             case GL_FLOAT_VEC2: {
-                GLfloat val[2]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformfv(uShaderProgramID, loc, &val[0]);
-                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(2, &val[0], loc)));
+                AddFloatUniform(name, 2);
                 break;
             }
             case GL_FLOAT_VEC3: {
-                GLfloat val[3]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformfv(uShaderProgramID, loc, &val[0]);
-                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(3, &val[0], loc)));
+                AddFloatUniform(name, 3);
                 break;
             }
             case GL_FLOAT_VEC4: {
-                GLfloat val[4]{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformfv(uShaderProgramID, loc, &val[0]);
-                mFloatUniforms.insert(std::make_pair(std::string(name), Uniform<GLfloat>(4, &val[0], loc)));
+                AddFloatUniform(name, 4);
                 break;
             }
             case GL_BOOL: {
-                GLint val{};
-                GLint loc = glGetUniformLocation(uShaderProgramID, name);
-                glGetUniformiv(uShaderProgramID, loc, &val);
-                mBoolUniforms.insert(std::make_pair(std::string(name), Uniform<GLboolean>(1, reinterpret_cast<GLboolean*>(&val), loc)));
+                AddBoolUniform(name, 1);
                 break;
             }
             }
