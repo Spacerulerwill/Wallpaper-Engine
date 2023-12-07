@@ -17,7 +17,6 @@ int main() {
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());
-        app.Cleanup();
         return EXIT_FAILURE;
     }
 }
