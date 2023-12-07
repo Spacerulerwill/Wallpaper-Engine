@@ -7,7 +7,6 @@ int main() {
     Application app;
     try {
         app.Run();
-        app.Cleanup();
         return EXIT_SUCCESS;
     }
     catch (const std::system_error& e) {
