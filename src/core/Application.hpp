@@ -18,8 +18,8 @@ private:
     void ProcessImGUI() const;
     void DrawImGUIControlMenu();
     void UpdateUniforms() const;
-    bool mIsLoadShaderButtonPressed = false;
-    bool mIsUnloadShaderButtonPressed = false;
+    bool mIsLoadWallpaperButtonPressed = false;
+    bool mIsUnloadWallpaperButtonPressed = false;
     GLuint mVAO{};
 public:
     Application();

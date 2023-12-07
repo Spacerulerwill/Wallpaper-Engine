@@ -116,7 +116,7 @@ void Application::Cleanup() const
 
 void Application::ProcessImGUI() const
 {
-    if (mIsLoadShaderButtonPressed) {
+    if (mIsLoadWallpaperButtonPressed) {
         std::string newPath = std::string();
         bool success = openFileDialog(&newPath);
 
@@ -128,11 +128,11 @@ void Application::ProcessImGUI() const
             }
         }
         else {
-            LOG_ERROR("Failed to load shader");
+            LOG_ERROR("Failed to load wallpaper");
         }
     }
 
-    if (mIsUnloadShaderButtonPressed) {
+    if (mIsUnloadWallpaperButtonPressed) {
         if (pWallpaperManager->hasWallpaper) {
             pWallpaperManager->hasWallpaper = false;
             pWallpaperWindow->SetHidden();
@@ -153,9 +153,9 @@ void Application::DrawImGUIControlMenu()
         ImGui::Begin(pWallpaperManager->mMetadata.name.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
     }
 
-    mIsLoadShaderButtonPressed = ImGui::Button("Load Shader");
+    mIsLoadWallpaperButtonPressed = ImGui::Button("Load");
     ImGui::SameLine();
-    mIsUnloadShaderButtonPressed = ImGui::Button("Unload Shader");
+    mIsUnloadWallpaperButtonPressed = ImGui::Button("Unload");
 
     // Controls for integer uniforms
     for (auto it = pWallpaperManager->mIntUniforms.begin(); it != pWallpaperManager->mIntUniforms.end(); ++it) {
