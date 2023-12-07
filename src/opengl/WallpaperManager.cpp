@@ -214,21 +214,21 @@ void WallpaperManager::AddBoolUniform(std::string name, size_t count)
     }
 }
 
-void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions windowDimensions)
+bool WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions windowDimensions)
 {
     WallpaperSources wallpaperSources{};
 
     // First of all, parse the wallpaper soure file into its seperate components (fragment shader and config yaml)
     bool parsed = ParseWallpaperSource(path, &wallpaperSources);
     if (!parsed) {
-        return;
+        return false;
     }
 
     // Try and compile the fragment shader
     GLuint fragmentShader = 0;
     bool compiled = CompileShader(GL_FRAGMENT_SHADER, wallpaperSources.fragmentShaderSource, &fragmentShader);
     if (!compiled) {
-        return;
+        return false;
     }
 
     // Try and parse the metadata yaml
@@ -246,12 +246,12 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
         catch (YAML::Exception e) {
             glDeleteShader(fragmentShader);
             LOG_ERROR(e.what());
-            return;
+            return false;
         }
 
         if (!metadataParsed) {
             glDeleteShader(fragmentShader);
-            return;
+            return false;
         }
     }
 
@@ -270,7 +270,7 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
         LOG_TRACE("Failed to validate shader program for wallpaper " + path);
         glDeleteProgram(program);
         glDeleteShader(fragmentShader);
-        return;
+        return false;
     }
 
     // We have made it without any errors so we are safe to remove previous shader
@@ -354,4 +354,5 @@ void WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     }
     hasWallpaper = true;
     LOG_INFO("Loaded wallpaper: " + path);
+    return true;
 }

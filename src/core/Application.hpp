@@ -4,6 +4,7 @@
 #include <gl.h>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <string>
 #include <opengl/WallpaperManager.hpp>
 #include <opengl/Window.hpp>
 
@@ -13,15 +14,17 @@ private:
     std::unique_ptr<WallpaperManager> pWallpaperManager = nullptr;
     std::unique_ptr<Window> pWallpaperWindow = nullptr;
     std::unique_ptr<Window> pImGUIWindow = nullptr;
-    wchar_t* pWallpaperDir;
-    void ProcessImGUI();
+    std::wstring mOriginalWallpaperPath;
+    void ProcessImGUI() const;
     void DrawImGUIControlMenu();
-    void UpdateUniforms();
+    void UpdateUniforms() const;
     bool mIsLoadShaderButtonPressed = false;
     bool mIsUnloadShaderButtonPressed = false;
+    GLuint mVAO{};
 public:
     Application();
     void Run();
+    void Cleanup() const;
 };
 
 #endif // !APPLICATION_H

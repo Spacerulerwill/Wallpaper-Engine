@@ -39,6 +39,14 @@ void Window::SwapBuffers() {
     glfwSwapBuffers(pWindow);
 }
 
+void Window::SetHidden() {
+    glfwHideWindow(pWindow);
+}
+
+void Window::SetVisible() {
+    glfwShowWindow(pWindow);
+}
+
 GLFWwindow* Window::GetWindow() const {
     return pWindow;
 }

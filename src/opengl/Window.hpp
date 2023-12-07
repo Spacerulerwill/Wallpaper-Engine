@@ -20,6 +20,8 @@ public:
     void SetShouldClose(int value);
     bool ShouldClose() const;
     void SwapBuffers();
+    void SetHidden();
+    void SetVisible();
     GLFWwindow* GetWindow() const;
     WindowDimensions GetDimensions() const;
 };

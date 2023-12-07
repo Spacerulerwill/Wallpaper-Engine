@@ -1,15 +1,17 @@
 #include <ShObjIdl.h>
 #include <util/OS.hpp>
+#include <util/Log.hpp>
 
-wchar_t* GetWallpaper() {
+std::wstring GetWallpaper() {
     wchar_t buf[512];
     SystemParametersInfoW(SPI_GETDESKWALLPAPER, 512, buf, 0);
-    return &buf[0];
+    buf[511] = '\0';
+    return std::wstring(buf);
 }
 
-void SetWallpaper(wchar_t* path)
+void SetWallpaper(const std::wstring& dir)
 {
-    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, static_cast<void*>(path), SPIF_UPDATEINIFILE);
+    SystemParametersInfoW(SPI_SETDESKWALLPAPER, 0, (PVOID)dir.c_str(), SPIF_UPDATEINIFILE);
 }
 
 bool openFileDialog(std::string* sFilePath)

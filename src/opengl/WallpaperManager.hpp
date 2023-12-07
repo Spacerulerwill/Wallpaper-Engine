@@ -85,7 +85,7 @@ private:
 public:
     WallpaperManager();
     ~WallpaperManager();
-    void TrySetWallpaper(const std::string& path, WindowDimensions);
+    bool TrySetWallpaper(const std::string& path, WindowDimensions);
 
     std::unordered_map<std::string, Uniform<GLint>> mIntUniforms;
     std::unordered_map<std::string, Uniform<GLboolean>> mBoolUniforms;

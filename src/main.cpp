@@ -4,20 +4,21 @@
 
 int main() {
     Log::Init();
+    Application app;
     try {
-        Application app;
         app.Run();
+        app.Cleanup();
+        return EXIT_SUCCESS;
     }
     catch (const std::system_error& e) {
         LOG_CRITICAL(e.what());
-        glfwTerminate();
-        return e.code().value();
+        app.Cleanup();
+        return EXIT_FAILURE;
     }
     catch (const std::runtime_error& e) {
         LOG_CRITICAL(e.what());
-        glfwTerminate();
+        app.Cleanup();
         return EXIT_FAILURE;
     }
-    glfwTerminate();
-    return EXIT_SUCCESS;
 }
+

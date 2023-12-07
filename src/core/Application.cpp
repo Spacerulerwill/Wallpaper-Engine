@@ -11,7 +11,7 @@
 #include <util/Log.hpp>
 #include <util/OS.hpp>
 
-Application::Application() : pWallpaperDir(GetWallpaper())
+Application::Application() : mOriginalWallpaperPath(GetWallpaper())
 {
 
 }
@@ -68,9 +68,8 @@ void Application::Run()
     to be a non default VAO bound always when we want to draw, so here we create one and never use it again
     to enable us to draw our fullscreen quad.
     */
-    GLuint vao;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
+    glGenVertexArrays(1, &mVAO);
+    glBindVertexArray(mVAO);
 
     /*
     Main application loop, we loop whilst the ImGUI window is open as the user should not be able to interact
@@ -81,11 +80,7 @@ void Application::Run()
         UpdateUniforms();
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
-
-        if (pWallpaperManager->hasWallpaper) {
-            glDrawArrays(GL_TRIANGLES, 0, 6);
-        }
-
+        glDrawArrays(GL_TRIANGLES, 0, 6);
         pWallpaperWindow->SwapBuffers();
 
         ProcessImGUI();
@@ -109,20 +104,28 @@ void Application::Run()
         glfwPollEvents();
 
     }
-
-    // Final cleanup, we reset the users wallpaper to what it was before and delete our VAO
-    SetWallpaper(pWallpaperDir);
-    glDeleteVertexArrays(1, &vao);
+    Cleanup();
 }
 
-void Application::ProcessImGUI()
+void Application::Cleanup() const
+{
+    glDeleteVertexArrays(1, &mVAO);
+    glfwTerminate();
+    SetWallpaper(mOriginalWallpaperPath);
+}
+
+void Application::ProcessImGUI() const
 {
     if (mIsLoadShaderButtonPressed) {
         std::string newPath = std::string();
         bool success = openFileDialog(&newPath);
 
         if (success) {
-            pWallpaperManager->TrySetWallpaper(newPath, pWallpaperWindow->GetDimensions());
+            bool hasWallpaperBefore = pWallpaperManager->hasWallpaper;
+            bool setWallpaper = pWallpaperManager->TrySetWallpaper(newPath, pWallpaperWindow->GetDimensions());
+            if (setWallpaper && !hasWallpaperBefore) {
+                pWallpaperWindow->SetVisible();
+            }
         }
         else {
             LOG_ERROR("Failed to load shader");
@@ -130,7 +133,11 @@ void Application::ProcessImGUI()
     }
 
     if (mIsUnloadShaderButtonPressed) {
-        pWallpaperManager->hasWallpaper = false;
+        if (pWallpaperManager->hasWallpaper) {
+            pWallpaperManager->hasWallpaper = false;
+            pWallpaperWindow->SetHidden();
+            SetWallpaper(mOriginalWallpaperPath);
+        };
     }
 }
 
@@ -198,7 +205,7 @@ void Application::DrawImGUIControlMenu()
     }
 }
 
-void Application::UpdateUniforms()
+void Application::UpdateUniforms() const
 {
     // First part is to send builtin uniforms
     // Update mouse uniform only if required
