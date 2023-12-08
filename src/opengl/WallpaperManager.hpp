@@ -27,9 +27,9 @@ struct UniformMetadata<GLboolean> {
 
 template<typename T>
 struct UniformMetadata {
-    std::string name;
-    T min;
-    T max;
+    std::string name{};
+    T min{};
+    T max{};
 };
 
 template<typename T>

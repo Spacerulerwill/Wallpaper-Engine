@@ -32,13 +32,13 @@ add_subdirectory(submodules/spdlog)
 add_subdirectory(submodules/yaml-cpp)
 
 target_include_directories(${PROJECT_NAME} 
-    PUBLIC submodules/glfw/include
-    PUBLIC submodules/spdlog/include
-    PUBLIC submodules/yaml-cpp/include
-    PUBLIC include/imgui
-    PUBLIC include/glad
-    PUBLIC include
-    PUBLIC src
+    SYSTEM PRIVATE submodules/glfw/include
+    SYSTEM PRIVATE submodules/spdlog/include
+    SYSTEM PRIVATE submodules/yaml-cpp/include
+    SYSTEM PRIVATE include/imgui
+    SYSTEM PRIVATE include/glad
+    SYSTEM PRIVATE include
+    SYSTEM PRIVATE src
 )
 
 target_link_directories(${PROJECT_NAME}
@@ -52,3 +52,5 @@ target_link_libraries(${PROJECT_NAME}
     PUBLIC glfw
     PUBLIC yaml-cpp
 )
+
+target_compile_options(${PROJECT_NAME} PRIVATE /W4 /external:W0 /wd4996)

@@ -117,7 +117,7 @@ bool WallpaperManager::ParseWallpaperMetadata(
         YAML::Node nameNode = node["name"];
         wallpaperMetadata.name = nameNode.as<std::string>();
     }
-    catch (const YAML::KeyNotFound& e) {
+    catch (const YAML::KeyNotFound&) {
         wallpaperMetadata.name = "";
     }
     catch (const YAML::BadConversion e) {
@@ -177,7 +177,7 @@ void WallpaperManager::AddIntUniform(std::string name, size_t count)
 void WallpaperManager::AddFloatUniform(std::string name, size_t count)
 {
     std::vector<GLfloat> val(count);
-    GLfloat loc = glGetUniformLocation(uShaderProgramID, name.c_str());
+    GLint loc = glGetUniformLocation(uShaderProgramID, name.c_str());
     glGetUniformfv(uShaderProgramID, loc, val.data());
     auto find = mFloatUniforms.find(name);
     if (find == mFloatUniforms.end()) {
@@ -198,7 +198,7 @@ void WallpaperManager::AddFloatUniform(std::string name, size_t count)
 void WallpaperManager::AddBoolUniform(std::string name, size_t count)
 {
     std::vector<GLboolean> val(count);
-    GLfloat loc = glGetUniformLocation(uShaderProgramID, name.c_str());
+    GLint loc = glGetUniformLocation(uShaderProgramID, name.c_str());
     glGetUniformiv(uShaderProgramID, loc, reinterpret_cast<GLint*>(val.data()));
     auto find = mBoolUniforms.find(name);
     if (find == mBoolUniforms.end()) {
@@ -292,9 +292,9 @@ bool WallpaperManager::TrySetWallpaper(const std::string& path, WindowDimensions
     GLchar name[bufSize];
     GLsizei length;
     glGetProgramiv(uShaderProgramID, GL_ACTIVE_UNIFORMS, &count);
-    for (GLuint i = 0; i < count; i++)
+    for (GLint i = 0; i < count; i++)
     {
-        glGetActiveUniform(uShaderProgramID, i, bufSize, &length, &size, &type, name);
+        glGetActiveUniform(uShaderProgramID, static_cast<GLuint>(i), bufSize, &length, &size, &type, name);
         if (strcmp(name, "iResolution") == 0 && type == GL_FLOAT_VEC2) {
             glUniform2f(glGetUniformLocation(uShaderProgramID, "iResolution"), static_cast<float>(windowDimensions.width), static_cast<float>(windowDimensions.height));
         }
