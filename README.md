@@ -42,8 +42,9 @@ source code goes and is mandatory. You get access to a few default uniforms `iRe
 # Build Instructions
 
 ## Windows 
-    cd tools
-    configure.bat
+    git clone https://github.com/Spacerulerwill/Wallpaper-Engine --recursive
+    cd WallpaperEngine/tools
+    configure
     cd ../build
     WallpaperEngine.sln
 Once you are in the solution you can build the project like normal. Make sure to copy the ```res``` folder to the binary executables location after it has been built.
