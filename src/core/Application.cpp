@@ -10,6 +10,7 @@
 
 #include <util/Log.hpp>
 #include <util/OS.hpp>
+#include <opengl/Uniform.hpp>
 
 Application::Application() : mOriginalWallpaperPath(GetWallpaper())
 {

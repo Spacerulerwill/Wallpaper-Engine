@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/core/Application.hpp
     src/opengl/WallpaperManager.cpp
     src/opengl/WallpaperManager.hpp
+    src/opengl/Uniform.hpp
     src/opengl/Window.cpp
     src/opengl/Window.hpp
     src/util/Log.cpp
