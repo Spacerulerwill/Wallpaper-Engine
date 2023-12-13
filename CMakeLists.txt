@@ -22,6 +22,8 @@ add_executable(${PROJECT_NAME}
     src/opengl/Uniform.hpp
     src/opengl/Window.cpp
     src/opengl/Window.hpp
+    src/opengl/Texture.cpp
+    src/opengl/Texture.hpp
     src/util/Log.cpp
     src/util/Log.hpp
     src/util/OS.cpp
