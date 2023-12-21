@@ -6,7 +6,7 @@
 #include <util/Log.hpp>
 #include <yaml-cpp/yaml.h>
 
-#define DEFAULT_VERTEX_SHADER_PATH "res/vertex.glsl"
+#define DEFAULT_VERTEX_SHADER_PATH "vertex.glsl"
 
 WallpaperManager::WallpaperManager() {
     LoadVertexShader();

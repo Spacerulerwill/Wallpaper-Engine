@@ -49,7 +49,7 @@ void Application::Run()
 
     // Create our shader manager and set it to use the default shader
     pWallpaperManager = std::make_unique<WallpaperManager>();
-    pWallpaperManager->TrySetWallpaper("res/default.wallpaper", pWallpaperWindow->GetDimensions());
+    pWallpaperManager->TrySetWallpaper("default.wallpaper", pWallpaperWindow->GetDimensions());
     ImGui::CreateContext();
 
     /*
