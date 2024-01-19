@@ -47,4 +47,4 @@ source code goes and is mandatory. You get access to a few default uniforms `iRe
     configure
     cd ../build
     WallpaperEngine.sln
-Once you are in the solution you can build the project like normal. Make sure to copy the ```res``` folder to the binary executables location after it has been built.
+Once you are in the solution you can build and run the project like normal.
