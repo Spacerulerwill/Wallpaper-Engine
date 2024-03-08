@@ -30,14 +30,14 @@ add_executable(${PROJECT_NAME}
     src/util/OS.hpp
 )
 
-add_subdirectory(submodules/glfw)
-add_subdirectory(submodules/spdlog)
-add_subdirectory(submodules/yaml-cpp)
+add_subdirectory(lib/submodules/glfw)
+add_subdirectory(lib/submodules/spdlog)
+add_subdirectory(lib/submodules/yaml-cpp)
 
 target_include_directories(${PROJECT_NAME} 
-    SYSTEM PRIVATE submodules/glfw/include
-    SYSTEM PRIVATE submodules/spdlog/include
-    SYSTEM PRIVATE submodules/yaml-cpp/include
+    SYSTEM PRIVATE lib/submodules/glfw/include
+    SYSTEM PRIVATE lib/submodules/spdlog/include
+    SYSTEM PRIVATE lib/submodules/yaml-cpp/include
     SYSTEM PRIVATE include/imgui
     SYSTEM PRIVATE include/glad
     SYSTEM PRIVATE include
@@ -45,9 +45,9 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_directories(${PROJECT_NAME}
-    PRIVATE submodules/glfw/src
-    PRIVATE submodules/spdlog/src
-    PRIVATE submodules/yaml-cpp/src
+    PRIVATE lib/submodules/glfw/src
+    PRIVATE lib/submodules/spdlog/src
+    PRIVATE lib/submodules/yaml-cpp/src
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -61,8 +61,17 @@ target_compile_options(${PROJECT_NAME} PRIVATE /W4 /external:W0 /wd4996)
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/res $<TARGET_FILE_DIR:${PROJECT_NAME}>)
-
 if(WIN32)
+    # copy dynamic libraries to executable location
+    add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_SOURCE_DIR}/lib/windows/dynamic $<TARGET_FILE_DIR:${PROJECT_NAME}>)
+    # link static libraries
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/lib/windows/irrKlang.lib)
     set_property(TARGET ${PROJECT_NAME}  PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+endif(WIN32)
+if(WIN32)
+       set_property(TARGET ${PROJECT_NAME}  PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR})
     set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
 endif(WIN32)
